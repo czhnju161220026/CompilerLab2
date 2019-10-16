@@ -1,14 +1,13 @@
 # Compile Lab 2: semantic analysis
-## 10.16
+## 2019/10/16 
 ### 进展
 + 扩展了createSymbol函数
-+ 添加了对于Filed，Argument，RetValue的定义，以及他们的构造函数
++ 添加了对于ArrayContent, Filed，Argument，RetValue的定义，以及他们的构造函数
 + 添加了对于符号内容的定义（int, float, function, struct_type, struct_value, array）
 + 添加了outptuSymbol用于输出符号进行测试
-+ 函数的具体用法见注释
++ 函数的具体用法见注释和main.c中的例子
 ### TODO：
 + 似乎要重构createSymbol，用可选参数不好，因为无法准确知道语法树的节点个数
-+ 忘了考虑Field和Argument为Array的情况
 ## HASH SET
 ### HASH_SIZE
 * 定义了哈希集的大小
