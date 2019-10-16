@@ -1,20 +1,49 @@
 #include "symbol.h"
-//field名 + 类型 + 类型名（当类型为struct时需要）
+//创建一个数组信息 
+//基类型 + argc + 类型名（当类型为struct时需要) + 每维长度
+ArrayContent* createArrayContent(ValueTypes type, int argc, ...) {
+    ArrayContent* arrayContent = (ArrayContent*)malloc(sizeof(ArrayContent));
+    arrayContent->type = type;
+    int dimensions = argc;
+    va_list argp;
+    va_start(argp, argc);
+    arrayContent->typeName = NULL;
+    if(type == _STRUCT_TYPE_) {
+        arrayContent->typeName = va_arg(argp, char*);
+        dimensions--;
+    }
+    arrayContent->size = (int*)malloc(dimensions * sizeof(int));
+    for(int i = 0; i < dimensions; i++) {
+        arrayContent->size[i] = va_arg(argp, int);
+    }
+    return arrayContent;
+}
+//创建结构体中某个域的信息
+//field名 + 类型 + 类型名（当类型为struct时需要) / 数组信息(当类型是array时需要)
 Field* createField(char* name, ValueTypes type, ...) {
     Field* field = (Field*)malloc(sizeof(Field));
     field->type = type;
     field->next = NULL;
     field->typeName = NULL;
+    field->arrayContent = NULL;
     field->name = (char*)malloc(sizeof(char) * strlen(name));
     strcpy(field->name, name);
+    //如果是结构体
     if(type == _STRUCT_TYPE_) {
         va_list argp;
         va_start(argp, 1);
         field->typeName = va_arg(argp, char*);
     }
+    //如果是数组
+    if(type == _ARRAY_TYPE_) {
+        va_list argp;
+        va_start(argp, 1);
+        field->arrayContent = va_arg(argp, ArrayContent*);
+    }
     return field;
 }
-//类型 + 类型名（当类型为struct时需要）
+//创建函数返回值的信息
+//类型 + 类型名（当类型为struct时需要）/ 数组信息(当类型是array时需要)
 RetValue* createRetValue(ValueTypes type, ...) {
     RetValue* ret = (RetValue*)malloc(sizeof(RetValue));
     ret->type = type;
@@ -24,10 +53,17 @@ RetValue* createRetValue(ValueTypes type, ...) {
         va_start(argp, 1);
         ret->typeName = va_arg(argp, char*);
     }
+    //如果是数组
+    if(type == _ARRAY_TYPE_) {
+        va_list argp;
+        va_start(argp, 1);
+        ret->arrayContent = va_arg(argp, ArrayContent*);
+    }
     return ret;
 }
 
-//参数名 + 类型 + 类型名（当类型为struct时需要）
+//创建函数参数的信息
+//参数名 + 类型 + 类型名（当类型为struct时需要）/ 数组信息(当类型是array时需要)
 Argument* createArgument(char* name, ValueTypes type, ...) {
     Argument* arg = (Argument*)malloc(sizeof(Argument));
     arg->name = (char*)malloc(sizeof(char) * strlen(name));
@@ -38,6 +74,11 @@ Argument* createArgument(char* name, ValueTypes type, ...) {
         va_list argp;
         va_start(argp, 1);
         arg->typeName = va_arg(argp, char*);
+    }
+    if(type == _ARRAY_TYPE_) {
+        va_list argp;
+        va_start(argp, 1);
+        arg->arrayContent = va_arg(argp, ArrayContent*);
     }
     return arg;
 }
@@ -66,19 +107,19 @@ Symbol* createSymbol(char* name, SymbolTypes symbol_type, int argc, ...) {
     va_start(argp, argc); //读入所有可选参数
     switch(symbol_type){
         case INT_SYMBOL: {
-            IntSymbol* content = (IntSymbol*)malloc(sizeof(IntSymbol));
+            IntContent* content = (IntContent*)malloc(sizeof(IntContent));
             content->val = va_arg(argp, int);
             s->int_content = content;
             break;
         }
         case FLOAT_SYMBOL: {
-            FloatSymbol* content = (FloatSymbol*)malloc(sizeof(FloatSymbol));
+            FloatContent* content = (FloatContent*)malloc(sizeof(FloatContent));
             content->val =(float)va_arg(argp, double);
             s->float_content = content;
             break;
         }
         case ARRAY_SYMBOL: {
-            ArraySymbol* content = (ArraySymbol*)malloc(sizeof(ArraySymbol));
+            ArrayContent* content = (ArrayContent*)malloc(sizeof(ArrayContent));
             content->type = va_arg(argp, ValueTypes);//基类型
             int dimensions = argc - 1;               //维数
             if(content->type == _STRUCT_TYPE_) {     //如果是struct，要设置typeName
@@ -97,7 +138,7 @@ Symbol* createSymbol(char* name, SymbolTypes symbol_type, int argc, ...) {
             break;
         }
         case STRUCT_TYPE_SYMBOL: {
-            StructTypeSymbol* content = (StructTypeSymbol*)malloc(sizeof(StructTypeSymbol));
+            StructTypeContent* content = (StructTypeContent*)malloc(sizeof(StructTypeContent));
             Field* head = NULL;
             Field* tail = NULL;
             int num_of_fields = argc;
@@ -116,7 +157,7 @@ Symbol* createSymbol(char* name, SymbolTypes symbol_type, int argc, ...) {
             break;
         }
         case STRUCT_VAL_SYMBOL: {
-            StructValueSymbol* content = (StructValueSymbol*)malloc(sizeof(StructValueSymbol));
+            StructValueContent* content = (StructValueContent*)malloc(sizeof(StructValueContent));
             char* typeName = va_arg(argp, char*);
             content->typeName = (char*)malloc(sizeof(char) * strlen(typeName));
             strcpy(content->typeName, typeName);
@@ -124,7 +165,7 @@ Symbol* createSymbol(char* name, SymbolTypes symbol_type, int argc, ...) {
             break;
         }
         case FUNC_SYMBOL: {
-            FuncSymbol* content = (FuncSymbol*)malloc(sizeof(FuncSymbol));
+            FuncContent* content = (FuncContent*)malloc(sizeof(FuncContent));
             content->ret = va_arg(argp, RetValue*);
             Argument* head = NULL;
             Argument* tail = NULL;
@@ -158,11 +199,12 @@ void outputSymbol(Symbol* symbol) {
             case FLOAT_SYMBOL :printf("Symbol type: float\n"); printf("Symbol val: %f\n", symbol->float_content->val); break;
             case ARRAY_SYMBOL: {
                 printf("Symbol type: array\n");
-                ArraySymbol* content = symbol->array_content;
+                ArrayContent* content = symbol->array_content;
                 switch(content->type) {
                     case _INT_TYPE_: printf("Array basic type : int\n");break;
                     case _FLOAT_TYPE_: printf("Array basic type : float\n"); break;
                     case _STRUCT_TYPE_: printf("Array basic type: struct %s.\n", content->typeName);
+                    case _ARRAY_TYPE_:  printf("array "); break;
                 }
                 printf("Array shape: [");
                 for(int i = 0;i < content->dimensions; i++) {
@@ -180,6 +222,7 @@ void outputSymbol(Symbol* symbol) {
                         case _INT_TYPE_: printf("int ");break;
                         case _FLOAT_TYPE_: printf("float "); break;
                         case _STRUCT_TYPE_: printf("struct %s ", p->typeName); break;
+                        case _ARRAY_TYPE_:  printf("array "); break;
                     }
                     printf("%s, ", p->name);
                     p = p->next;
@@ -202,13 +245,15 @@ void outputSymbol(Symbol* symbol) {
                     case _INT_TYPE_: printf("int\n");break;
                     case _FLOAT_TYPE_: printf("float\n"); break;
                     case _STRUCT_TYPE_: printf("struct %s\n", ret->typeName);
+                    case _ARRAY_TYPE_:  printf("array "); break;
                 }
                 printf("Arguments:[");
                 while(p!=NULL) {
                     switch(p->type) {
                         case _INT_TYPE_: printf("int ");break;
                         case _FLOAT_TYPE_: printf("float "); break;
-                        case _STRUCT_TYPE_: printf("struct %s ", p->typeName);
+                        case _STRUCT_TYPE_: printf("struct %s ", p->typeName); break;
+                        case _ARRAY_TYPE_:  printf("array "); break;
                     }
                     printf("%s, ", p->name);
                     p = p->next;

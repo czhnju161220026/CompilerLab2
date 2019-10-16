@@ -54,11 +54,11 @@ int main(int argc, char** argv) {
                             2,
                             createRetValue(_STRUCT_TYPE_, "Student"),
                             createArgument("arg1", _INT_TYPE_));
-    //创建一个嵌套定义的struct School
+    //创建一个嵌套定义的struct School, 含有三个域，第一个是一个Student数组
     Symbol* s3 = createSymbol("School",
                             STRUCT_TYPE_SYMBOL,
                             3,
-                            createField("student", _STRUCT_TYPE_, "Student"),
+                            createField("student", _ARRAY_TYPE_, createArrayContent(_STRUCT_TYPE_, 2, "Student", 20)),
                             createField("a", _INT_TYPE_),
                             createField("b", _FLOAT_TYPE_));
     //创建一个Student数组
