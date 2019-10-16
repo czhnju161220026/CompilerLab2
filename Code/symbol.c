@@ -1,10 +1,12 @@
 #include "symbol.h"
-
+//field名 + 类型 + 类型名（当类型为struct时需要）
 Field* createField(char* name, ValueTypes type, ...) {
     Field* field = (Field*)malloc(sizeof(Field));
     field->type = type;
     field->next = NULL;
     field->typeName = NULL;
+    field->name = (char*)malloc(sizeof(char) * strlen(name));
+    strcpy(field->name, name);
     if(type == _STRUCT_TYPE_) {
         va_list argp;
         va_start(argp, 1);
@@ -12,7 +14,7 @@ Field* createField(char* name, ValueTypes type, ...) {
     }
     return field;
 }
-
+//类型 + 类型名（当类型为struct时需要）
 RetValue* createRetValue(ValueTypes type, ...) {
     RetValue* ret = (RetValue*)malloc(sizeof(RetValue));
     ret->type = type;
@@ -25,7 +27,7 @@ RetValue* createRetValue(ValueTypes type, ...) {
     return ret;
 }
 
-
+//参数名 + 类型 + 类型名（当类型为struct时需要）
 Argument* createArgument(char* name, ValueTypes type, ...) {
     Argument* arg = (Argument*)malloc(sizeof(Argument));
     arg->name = (char*)malloc(sizeof(char) * strlen(name));
@@ -146,5 +148,77 @@ Symbol* createSymbol(char* name, SymbolTypes symbol_type, int argc, ...) {
 }
 
 void outputSymbol(Symbol* symbol) {
-
+    if(symbol == NULL) {
+        printf("Null symbol\n");
+    }
+    else {
+        printf("Symbol name : %s \n", symbol->name);
+        switch(symbol->symbol_type) {
+            case INT_SYMBOL:  printf("Symbol type: int\n");printf("Symbol val: %d\n", symbol->int_content->val); break;
+            case FLOAT_SYMBOL :printf("Symbol type: float\n"); printf("Symbol val: %f\n", symbol->float_content->val); break;
+            case ARRAY_SYMBOL: {
+                printf("Symbol type: array\n");
+                ArraySymbol* content = symbol->array_content;
+                switch(content->type) {
+                    case _INT_TYPE_: printf("Array basic type : int\n");break;
+                    case _FLOAT_TYPE_: printf("Array basic type : float\n"); break;
+                    case _STRUCT_TYPE_: printf("Array basic type: struct %s.\n", content->typeName);
+                }
+                printf("Array shape: [");
+                for(int i = 0;i < content->dimensions; i++) {
+                    printf("%d, ", content->size[i]);
+                }
+                printf("]\n");
+                break;
+            }
+            case STRUCT_TYPE_SYMBOL: {
+                printf("Symbol type: struct type\n");
+                Field* p = symbol->struct_def->fields;
+                printf("Symbol fields:[");
+                while(p != NULL) {
+                    switch(p->type) {
+                        case _INT_TYPE_: printf("int ");break;
+                        case _FLOAT_TYPE_: printf("float "); break;
+                        case _STRUCT_TYPE_: printf("struct %s ", p->typeName); break;
+                    }
+                    printf("%s, ", p->name);
+                    p = p->next;
+                }
+                printf("]\n");
+                break;
+            }
+            case STRUCT_VAL_SYMBOL: {
+                printf("Symbol type: struct value\n");
+                printf("Type: %s\n", symbol->struct_value->typeName);
+                break;
+            }
+            case FUNC_SYMBOL: {
+                printf("Symbol type: function\n");
+                RetValue* ret = symbol->func_content->ret;
+                Argument* p = symbol->func_content->arguments;
+                printf("Ret value : ");
+                switch(ret->type) {
+                    case _VOID_TYPE_: printf("void\n"); break;
+                    case _INT_TYPE_: printf("int\n");break;
+                    case _FLOAT_TYPE_: printf("float\n"); break;
+                    case _STRUCT_TYPE_: printf("struct %s\n", ret->typeName);
+                }
+                printf("Arguments:[");
+                while(p!=NULL) {
+                    switch(p->type) {
+                        case _INT_TYPE_: printf("int ");break;
+                        case _FLOAT_TYPE_: printf("float "); break;
+                        case _STRUCT_TYPE_: printf("struct %s ", p->typeName);
+                    }
+                    printf("%s, ", p->name);
+                    p = p->next;
+                }
+                printf("]\n");
+                break;
+            }
+        }
+    }
+    printf("-------------------------------------------\n");
 }
+
+
