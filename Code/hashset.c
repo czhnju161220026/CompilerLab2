@@ -1,5 +1,6 @@
 #include "hashset.h"
-
+#include "symbol.h"
+HashSet* symbolTable = NULL;
 HashSet* initializeHashSet(int size) {
     HashSet* hashSet = (HashSet*) malloc(sizeof(HashSet));
     if (hashSet == NULL) {
@@ -32,6 +33,10 @@ bool isContain(HashSet* hashSet, char* name) {
         printf("the hash set is NULL\n");
         return false;
     }
+    if (name == NULL) {
+        printf("the name is NULL\n");
+        return false;
+    }
 
     unsigned int val = pjwHash(name) % HASH_SIZE;
     Symbol* head = hashSet->buckets[val].head;
@@ -46,6 +51,10 @@ bool isContain(HashSet* hashSet, char* name) {
 }
 
 Symbol* get(HashSet* hashSet, char* name) {
+    if (name == NULL) {
+        printf("the name is NULL\n");
+        return false;
+    }
     if (hashSet == NULL) {
         printf("the hash set is NULL\n");
         return NULL;
@@ -64,6 +73,10 @@ Symbol* get(HashSet* hashSet, char* name) {
 }
 
 bool insert(HashSet* hashSet, Symbol* symbol) {
+    if (symbol->name == NULL) {
+        printf("the name is NULL\n");
+        return false;
+    }
     if (isContain(hashSet, symbol->name)) {
         return false;
     } else {
@@ -71,5 +84,15 @@ bool insert(HashSet* hashSet, Symbol* symbol) {
         symbol->next = hashSet->buckets[val].head;
         hashSet->buckets[val].head = symbol;
         return true;
+    }
+}
+
+void outputHashSet(HashSet* hashSet) {
+    for (int i = 0; i < hashSet->size; i++) {
+	Symbol* p = hashSet->buckets[i].head;
+	while (p != NULL) {
+	    outputSymbol(p);
+	    p = p -> next;
+	}
     }
 }

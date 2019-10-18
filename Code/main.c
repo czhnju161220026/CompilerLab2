@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include "grammarTree.h"
 #include "semantic.h"
+#include "symbol.h"
+#include "hashset.h"
 extern void yyrestart(FILE*);
 extern void yyparse(void);
 extern Morpheme* root;
 extern int syntax_correct;
 extern int lexical_correct;
+extern HashSet* symbolTable;
 
 int main(int argc, char** argv) {
     /*if(argc <= 1) {
@@ -41,37 +44,34 @@ int main(int argc, char** argv) {
     printf("%s\n", p->name);
     printf("%d\n", insert(set, s));*/
 
-    HashSet* symbolTable = initializeHashSet(HASH_SIZE);
-    //创建一个代表struct类型的符号 Student(int age, float score);
-    Symbol* s1 = createSymbol("Student", 
-                            STRUCT_TYPE_SYMBOL, 
-                            2, 
-                            createField("age", _INT_TYPE_), 
-                            createField("score", _FLOAT_TYPE_));
-    //创建一个返回struct Student, 接受int的函数f
-    Symbol* s2 = createSymbol("f",
-                            FUNC_SYMBOL,
-                            2,
-                            createRetValue(_STRUCT_TYPE_, "Student"),
-                            createArgument("arg1", _INT_TYPE_));
-    //创建一个嵌套定义的struct School, 含有三个域，第一个是一个Student数组
-    Symbol* s3 = createSymbol("School",
-                            STRUCT_TYPE_SYMBOL,
-                            3,
-                            createField("student", _ARRAY_TYPE_, createArrayContent(_STRUCT_TYPE_, 2, "Student", 20)),
-                            createField("a", _INT_TYPE_),
-                            createField("b", _FLOAT_TYPE_));
-    //创建一个Student数组
-    Symbol* s4 = createSymbol("students",
-                            ARRAY_SYMBOL,
-                            4,
-                            _STRUCT_TYPE_,
-                            "Student",
-                            12,
-                            34);
-    outputSymbol(s1);
-    outputSymbol(s2);
-    outputSymbol(s3);
-    outputSymbol(s4);
+    symbolTable = initializeHashSet(HASH_SIZE);
+    Symbol* s1 = createSymbol();
+    setSymbolName(s1, "main");
+    setSymbolType(s1, FUNC_SYMBOL);
+    setFuncReturnValue(s1, _INT_TYPE_, "");
+	Symbol* s2 = createSymbol();
+	setSymbolName(s2, "x1");
+	setSymbolType(s2, INT_SYMBOL);
+	insert(symbolTable, s2);
+	Symbol* s3 = createSymbol();
+	setSymbolName(s3, "x2");
+	setSymbolType(s3, INT_SYMBOL);
+	insert(symbolTable, s3);
+    addFuncArgument(s1, "x1");
+    addFuncArgument(s1, "x2");
+    insert(symbolTable, s1);
+    Symbol* s4 = createSymbol();
+    setSymbolName(s4, "p");
+    setSymbolType(s4, INT_SYMBOL);
+    insert(symbolTable, s4);
+    Symbol* s5 = createSymbol();
+    setSymbolName(s5, "i");
+    setSymbolType(s5, INT_SYMBOL);
+    insert(symbolTable, s5);
+    Symbol* s6 = createSymbol();
+    setSymbolName(s6, "i");
+    setSymbolType(s6, INT_SYMBOL);
+    insert(symbolTable, s6);
 
+    outputHashSet(symbolTable);
 }

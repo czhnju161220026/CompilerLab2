@@ -6,9 +6,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+
 //定义一个符号的类型
 typedef enum SymbolTypes {
-    INT_SYMBOL,
+    INT_SYMBOL = 1,
     FLOAT_SYMBOL,
     ARRAY_SYMBOL,
     STRUCT_TYPE_SYMBOL, //该符号是一个struct定义
@@ -18,9 +19,8 @@ typedef enum SymbolTypes {
 
 //定义值可能的类型
 typedef enum ValueTypes {
-    _INT_TYPE_,
+    _INT_TYPE_ = 1,
     _FLOAT_TYPE_,
-    _VOID_TYPE_,
     _STRUCT_TYPE_,
     _ARRAY_TYPE_,
     //_POINTER_TYPE_, 没有定义指针运算符，不需要指针类型
@@ -45,33 +45,21 @@ typedef struct ArrayContent {
 } ArrayContent;
 
 //FUNC_SYMBOL的内容
-typedef struct RetValue {
-    ValueTypes type; //返回值类型
-    char * typeName; //如果返回值类型是一个struct，那么这个字段指明struct的名字
-    ArrayContent* arrayContent; //如果返回值是一个array，那么这个字段指明array的信息（基类型，维数，每维长度)
-} RetValue;
-
 typedef struct Argument {
-    ValueTypes type; //参数类型
-    char* typeName; //如果参数是一个struct，那么typeName指明它的名称
-    ArrayContent* arrayContent; //如果参数是一个array，那么这个字段指明array的信息（基类型，维数，每维长度)
-    char* name;      //参数名
+    char* name;      //参数名，cmm中所有变量的作用域都是全局的，所以形参也在符号表中，应去符号表里查找
     struct Argument* next; //下一个参数
-    
 } Argument;
 
 typedef struct FuncContent {
-    RetValue* ret;       //返回值
+    ValueTypes retType; //返回值类型
+    char * typeName; //如果返回值类型是一个struct，那么这个字段指明struct的名字       //返回值
     Argument* arguments; //参数列表
 } FuncContent;
 
 //STRUCT_DEF_SYMBOL的内容
 typedef struct Field {
-    ValueTypes type; //类型
-    char* name;//参数名
+    char* name;//域名，cmm中所有变量的作用域都是全局的，所以field也在符号表中，应去符号表里查找
     struct Field* next; //下一个域
-    char* typeName; //如果域是一个struct， 那么这个字段指明struct的名字
-    ArrayContent* arrayContent; //如果域是一个array，那么这个字段指明array的信息（基类型，维数，每维长度)
 } Field;
 
 typedef struct StructTypeContent {
@@ -101,11 +89,16 @@ typedef struct Symbol {
     struct Symbol* next;
 } Symbol;
 
-ArrayContent* createArrayContent(ValueTypes type, int argc, ...);
-Field* createField(char* name, ValueTypes type,...);
-RetValue* createRetValue(ValueTypes type,...);
-Argument* createArgument(char* name, ValueTypes type, ...);
-Symbol* createSymbol(char* name, SymbolTypes symbol_type, int argc, ...);
 
-void outputSymbol(Symbol* symbol);
+Symbol* createSymbol();
+bool setSymbolName(Symbol* s, char* name);
+bool setSymbolType(Symbol* s, SymbolTypes type);
+bool addArrayDimension(Symbol* s, int size);
+bool setArrayType(Symbol* s, ValueTypes type, char* name);
+bool setFuncReturnValue(Symbol* s, ValueTypes type, char* name);
+bool addFuncArgument(Symbol* s, char* name);
+bool setStructValueType(Symbol* s, char* name);
+bool addStructTypeField(Symbol* s, char* name);
+
+bool outputSymbol(Symbol* s);
 #endif
