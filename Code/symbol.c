@@ -279,9 +279,16 @@ bool outputSymbol(Symbol* s) {
         }
 	printf("\n");
     } else if (s->symbol_type == STRUCT_TYPE_SYMBOL) {
-
+        printf("Symbol type: STRUCT_TYPE\n");
+        printf("Struct fields: \n");
+        Field* f = s->struct_def->fields;
+        while (f != NULL) {
+            printf("\t%s\n", f->name);
+            f= f->next;
+        }
     } else if (s->symbol_type == STRUCT_VAL_SYMBOL) {
-
+        printf("Symbol type: STRUCT_VAL\n");
+        printf("Struct type: %s\n", s->struct_value->typeName);
     } else {
 	printf("wrong type.\n"); 
 	return false;

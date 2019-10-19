@@ -1,5 +1,6 @@
 #include "semantic.h"
 #include "grammarTree.h"
+int anonymous = 0;
 extern HashSet* symbolTable;
 void printTotalGrammarTree(Morpheme* root, int depth) {
     if (root == NULL) {
@@ -81,8 +82,8 @@ bool handleExtDefList(Morpheme* root) {
 	return false;
     }
     if (c->type == _BLANK) {
- 	printf("\033[31mwhen handling ExtDefList, this ExtDefList is empty .\n\033[0m");
-	return false;
+ 	printf("\033[32mwhen handling ExtDefList, this ExtDefList is empty .\n\033[0m");
+	return true;
     }
     while (c != NULL) {
         if (c->type == _ExtDefList) {
@@ -100,24 +101,27 @@ bool handleExtDefList(Morpheme* root) {
 
 bool handleExtDef(Morpheme* root) {
     if (root == NULL) {
-	printf("when handling ExtDef, this ExtDef is NULL.\n");
+	printf("\033[31mwhen handling ExtDef, this ExtDef is NULL.\n\033[0m");
 	return false;
     }
 
     if (root->type != _ExtDef) {
-	printf("when handling ExtDef, this node is not ExtDef.\n");
+	printf("\033[31mwhen handling ExtDef, this node is not ExtDef.\n\033[0m");
 	return false;
     }
     printf("\033[32mStart handling ExtDef.\n\033[0m");
 
     Morpheme* c = root->child;
     if (c == NULL) {
- 	printf("when handling ExtDefList, child node is NULL .\n");
+ 	printf("\033[31mwhen handling ExtDefList, child node is NULL .\n\033[0m");
 	return false;
     }
     if (c->type == _Specifier && c->siblings != NULL && c->siblings->type == _SEMI) {
 	//ExtDef := Specifier SEMI
-	printf("ExtDef := Specifier SEMI\n");
+	ValueTypes* type = (ValueTypes*) malloc(sizeof(ValueTypes));
+        char** name = (char**) malloc(sizeof(char*));
+        handleSpecifier(c, type, name);
+        return true;
     } else if (c->type == _Specifier && c->siblings != NULL && c->siblings->type == _ExtDecList && c->siblings->siblings != NULL
             && c->siblings->siblings->type == _SEMI) {
         //ExtDef := Specifier ExtDecList SEMI
@@ -131,7 +135,7 @@ bool handleExtDef(Morpheme* root) {
         //ExtDef := Specifier FunDec CompSt
 	printf("ExtDef := Specifier FunDec CompSt\n");
     } else {
-	printf("when handling ExtDef, this ExtDef has a wrong child .\n");
+	printf("\033[31mwhen handling ExtDef, this ExtDef has a wrong child .\n\033[0m");
 	return false;
     }
 
@@ -180,11 +184,18 @@ bool handleStructSpecifier(Morpheme* root, ValueTypes* type, char** name) {
  	printf("when handling StructSpecifier, child node is NULL .\n");
 	return false;
     }
-    if (c->type == _STRUCT && c->siblings != NULL && c->siblings->type == _OptTag && c->siblings->siblings == NULL
+    if (c->type == _STRUCT && c->siblings != NULL && c->siblings->type == _OptTag && c->siblings->siblings != NULL
         && c->siblings->siblings->type == _LC && c->siblings->siblings->siblings != NULL  
-        && c->siblings->siblings->siblings->type == _DefList && c->siblings->siblings->siblings->siblings == NULL
+        && c->siblings->siblings->siblings->type == _DefList && c->siblings->siblings->siblings->siblings != NULL
         && c->siblings->siblings->siblings->siblings->type == _RC) {
 	//StructSpecifier := STRUCT OptTag LC DefList RC
+        *type = _STRUCT_TYPE_;
+        handleOptTag(c->siblings, name);
+        Symbol* s = createSymbol();
+        setSymbolName(s, *name); // TODO handle epsilon
+        setSymbolType(s, STRUCT_TYPE_SYMBOL);
+        insert(symbolTable, s);
+        return handleDefList(c->siblings->siblings->siblings, s);
     } else if (c->type == _STRUCT && c->siblings != NULL && c->siblings->type == _Tag) {
         //StructSpecifier := STRUCT Tag
 	*type = _STRUCT_TYPE_;
@@ -196,19 +207,20 @@ bool handleStructSpecifier(Morpheme* root, ValueTypes* type, char** name) {
     return true;
 }
 
-bool handleTag(Morpheme* root, char** name) {
+bool handleOptTag(Morpheme* root, char** name) {
     if (root == NULL) {
-	printf("when handling Tag, this Tag is NULL.\n");
+	printf("\033[31mwhen handling OptTag, this OptTag is NULL.\n\033[0m");
 	return false;
     }
-    if (root->type != _Tag) {
-	printf("when handling Tag, this node is not Tag.\n");
+    if (root->type != _OptTag) {
+	printf("\033[31mwhen handling OtTag, this node is not OptTag, this is %d.\n\033[0m", root->type);
 	return false;
     }
-    printf("\033[32mStart handling Tag.\n\033[0m");
+    printf("\033[32mStart handling OptTag.\n\033[0m");
+    
     Morpheme* c = root->child;
     if (c == NULL) {
- 	printf("when handling Tag, child node is NULL .\n");
+ 	printf("\033[31mwhen handling OptTag, child node is NULL .\n\033[0m");
 	return false;
     }
     if (c->type == _ID) {
@@ -217,11 +229,50 @@ bool handleTag(Morpheme* root, char** name) {
 	    strcpy(*name, c->idName);
             return true;
     	} else {
-    	    printf("when handling Tag, the idName is NULL.\n");
+    	    printf("\033[31mwhen handling OptTag, the idName is NULL.\n\033[0m");
+	    return false;
+   	 }
+    } else if (c->type == _BLANK) {
+        char str[80];
+        sprintf(str, "$%d", anonymous);
+        anonymous++;
+        *name = (char*) malloc(strlen(str) + 1);
+	strcpy(*name, str);
+        return true;
+    }else {
+        printf("\033[31mwhen handling OptTag, child node is wrong .\n\033[0m");
+	return false;
+    }
+
+    return true;
+}
+
+bool handleTag(Morpheme* root, char** name) {
+    if (root == NULL) {
+	printf("\033[31mwhen handling Tag, this Tag is NULL.\n\033[0m");
+	return false;
+    }
+    if (root->type != _Tag) {
+	printf("\033[31mwhen handling Tag, this node is not Tag.\n\033[0m");
+	return false;
+    }
+    printf("\033[32mStart handling Tag.\n\033[0m");
+    Morpheme* c = root->child;
+    if (c == NULL) {
+ 	printf("\033[31mwhen handling Tag, child node is NULL .\n\033[0m");
+	return false;
+    }
+    if (c->type == _ID) {
+    	if (c->idName != NULL) {
+	    *name = (char*) malloc(strlen(c->idName) + 1);
+	    strcpy(*name, c->idName);
+            return true;
+    	} else {
+    	    printf("\033[31mwhen handling Tag, the idName is NULL.\n\033[0m");
 	    return false;
    	 }
     } else {
-        printf("when handling Tag, child node is wrong .\n");
+        printf("\033[31mwhen handling Tag, child node is wrong .\n\033[0m");
 	return false;
     }
 
@@ -258,17 +309,17 @@ bool handleTYPE(Morpheme* root, ValueTypes* type) {
 
 bool handleVarDec(Morpheme* root, Symbol* s) {
     if (root == NULL) {
-	printf("when handling VarDec, this VarDec is NULL.\n");
+	printf("\033[31mwhen handling VarDec, this VarDec is NULL.\n\033[0m");
 	return false;
     }
     if (root->type != _VarDec) {
-	printf("when handling VarDec, this node is not VarDec.\n");
+	printf("\033[31mwhen handling VarDec, this node is not VarDec.\n\033[0m");
 	return false;
     }
     printf("\033[32mStart handling VarDec.\n\033[0m");
     Morpheme* c = root->child;
     if (c == NULL) {
- 	printf("when handling VarDec, child node is NULL .\n");
+ 	printf("\033[31mwhen handling VarDec, child node is NULL .\n\033[0m");
 	return false;
     }
 
@@ -283,6 +334,9 @@ bool handleVarDec(Morpheme* root, Symbol* s) {
         } 
         addArrayDimension(s, c->siblings->siblings->intValue);
         return handleVarDec(c, s);
+    } else {
+        printf("\033[31mwhen handling VarDec, this VarDec has a wrong child .\n\033[0m");
+	return false;
     }
 
     return true;
@@ -290,17 +344,17 @@ bool handleVarDec(Morpheme* root, Symbol* s) {
 
 bool handleExtDecList(Morpheme* root, ValueTypes* type, char** name) {
     if (root == NULL) {
-	printf("when handling ExtDecList, this ExtDecList is NULL.\n");
+	printf("\033[31mwhen handling ExtDecList, this ExtDecList is NULL.\n\033[0m");
 	return false;
     }
     if (root->type != _ExtDecList) {
-	printf("when handling ExtDecList, this node is not ExtDecList.\n");
+	printf("\033[31mwhen handling ExtDecList, this node is not ExtDecList.\n\033[0m");
 	return false;
     }
     printf("\033[32mStart handling ExtDecList.\n\033[0m");
     Morpheme* c = root->child;
     if (c == NULL) {
- 	printf("when handling ExtDecList, child node is NULL .\n");
+ 	printf("\033[31mwhen handling ExtDecList, child node is NULL .\n\033[0m");
 	return false;
     }
     if (c->type == _VarDec && c->siblings != NULL && c->siblings->type == _COMMA && c->siblings->siblings != NULL
@@ -345,11 +399,174 @@ bool handleExtDecList(Morpheme* root, ValueTypes* type, char** name) {
         }
         return true;
     } else {
-	printf("when handling ExtDecList, this ExtDecList has a wrong child .\n");
+	printf("\033[31mwhen handling ExtDecList, this ExtDecList has a wrong child .\n\033[0m");
 	return false;
     }
     return true;
 }
 
+bool handleDefList(Morpheme* root, Symbol* s) {
+    if (root == NULL) {
+	printf("\033[31mwhen handling DefList, this DefList is NULL.\n\033[0m");
+	return false;
+    }
 
+    if (root->type != _DefList) {
+	printf("\033[31mwhen handling DefList, this node is not DefList.\n\033[0m");
+	return false;
+    }
+    printf("\033[32mStart handling DefList.\n\033[0m");
+    Morpheme* c = root->child;
+    if (c == NULL) {
+ 	printf("\033[31mwhen handling ExtDefList, child node is NULL .\n\033[0m");
+	return false;
+    }
+    if (c->type == _BLANK) {
+ 	printf("\033[32mwhen handling DefList, this DefList is empty .\n\033[0m");
+	return true;
+    }
+    while (c != NULL) {
+        if (c->type == _DefList) {
+	    handleDefList(c, s);
+	} else if (c->type == _Def) {
+	    handleDef(c, s);
+	} else {
+	    printf("\033[31mwhen handling DefList, this DefList has a wrong child .\n\033[0m");
+	    return false;
+  	}
+        c = c->siblings;
+    }
+    return true;
+}
+
+bool handleDef(Morpheme* root, Symbol* s) {
+    if (root == NULL) {
+	printf("\033[31mwhen handling Def, this Def is NULL.\n\033[0m");
+	return false;
+    }
+
+    if (root->type != _Def) {
+	printf("\033[31mwhen handling Def, this node is not Def.\n\033[0m");
+	return false;
+    }
+    printf("\033[32mStart handling Def.\n\033[0m");
+
+    Morpheme* c = root->child;
+    if (c == NULL) {
+ 	printf("\033[31mwhen handling DefList, child node is NULL .\n\033[0m");
+	return false;
+    }
+    if (c->type == _Specifier && c->siblings != NULL && c->siblings->type == _DecList && c->siblings->siblings != NULL
+            && c->siblings->siblings->type == _SEMI) {
+        //Def := Specifier DecList SEMI
+	printf("Def := Specifier DecList SEMI\n");
+        ValueTypes* type = (ValueTypes*) malloc(sizeof(ValueTypes));
+        char** name = (char**) malloc(sizeof(char*));
+        handleSpecifier(c, type, name);
+        return handleDecList(c->siblings, s, type, name);
+    } else {
+	printf("\033[31mwhen handling Def, this Def has a wrong child .\n\033[0m");
+	return false;
+    }
+
+    return true;
+}
+
+bool handleDecList(Morpheme* root, Symbol* s, ValueTypes* type, char** name) {
+    if (root == NULL) {
+	printf("\033[31mwhen handling DecList, this DecList is NULL.\n\033[0m");
+	return false;
+    }
+    if (root->type != _DecList) {
+	printf("\033[31mwhen handling DecList, this node is not DecList.\n\033[0m");
+	return false;
+    }
+    printf("\033[32mStart handling DecList.\n\033[0m");
+    Morpheme* c = root->child;
+    if (c == NULL) {
+ 	printf("\033[31mwhen handling DecList, child node is NULL .\n\033[0m");
+	return false;
+    }
+    if (c->type == _Dec && c->siblings != NULL && c->siblings->type == _COMMA && c->siblings->siblings != NULL
+        && c->siblings->siblings->type == _DecList) {
+        Symbol* ss = createSymbol();
+        handleDec(c, ss);
+	if (ss->symbol_type == ARRAY_SYMBOL) {
+            setArrayType(ss, *type, *name);
+	    insert(symbolTable, ss);
+        } else {
+	    if (*type == _INT_TYPE_) {
+                setSymbolType(ss, INT_SYMBOL);
+                insert(symbolTable, ss);
+            } else if (*type == _FLOAT_TYPE_) {
+                setSymbolType(ss, FLOAT_SYMBOL);
+                insert(symbolTable, ss);
+            } else if (*type == _STRUCT_TYPE_) {
+                setSymbolType(ss, STRUCT_VAL_SYMBOL);
+                setStructValueType(ss, *name);
+                insert(symbolTable, ss);
+            }
+        }
+        if (s->symbol_type == STRUCT_TYPE_SYMBOL) {
+	    addStructTypeField(s, ss->name);
+        }
+        return handleDecList(c->siblings->siblings, s, type, name);
+    } else if (c->type == _Dec) {
+	Symbol* ss = createSymbol();
+        handleDec(c, ss);
+	if (ss->symbol_type == ARRAY_SYMBOL) {
+            setArrayType(ss, *type, *name);
+	    insert(symbolTable, ss);
+        } else {
+	    if (*type == _INT_TYPE_) {
+                setSymbolType(ss, INT_SYMBOL);
+                insert(symbolTable, ss);
+            } else if (*type == _FLOAT_TYPE_) {
+                setSymbolType(ss, FLOAT_SYMBOL);
+                insert(symbolTable, ss);
+            } else if (*type == _STRUCT_TYPE_) {
+                setSymbolType(ss, STRUCT_VAL_SYMBOL);
+                setStructValueType(ss, *name);
+                insert(symbolTable, ss);
+            }
+        }
+        if (s->symbol_type == STRUCT_TYPE_SYMBOL) {
+	    addStructTypeField(s, ss->name);
+        }
+        return true;
+    } else {
+	printf("\033[31mwhen handling ExtDecList, this ExtDecList has a wrong child .\n\033[0m");
+	return false;
+    }
+    return true;
+}
+
+bool handleDec(Morpheme* root, Symbol* s) {
+    if (root == NULL) {
+	printf("\033[31mwhen handling Dec, this Dec is NULL.\n\033[0m");
+	return false;
+    }
+    if (root->type != _Dec) {
+	printf("\033[31mwhen handling Dec, this node is not Dec.\n\033[0m");
+	return false;
+    }
+    printf("\033[32mStart handling Dec.\n\033[0m");
+    Morpheme* c = root->child;
+    if (c == NULL) {
+ 	printf("\033[31mwhen handling Dec, child node is NULL .\n\033[0m");
+	return false;
+    }
+
+    if (c->type == _VarDec && c->siblings != NULL && c->siblings->type == _ASSIGNOP && c->siblings->siblings != NULL 
+        && c->siblings->siblings->type == _Exp) {
+        return handleVarDec(c, s);
+    } else if (c->type == _VarDec) {
+        return handleVarDec(c, s);
+    } else {
+        printf("\033[31mwhen handling Dec, this Dec has a wrong child .\n\033[0m");
+	return false;
+    }
+
+    return true;
+}
 

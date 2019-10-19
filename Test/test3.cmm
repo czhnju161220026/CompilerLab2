@@ -1,0 +1,15 @@
+struct {
+    int a = 1;
+    int b;
+} aa;
+
+struct Student {
+  float cc;
+  struct {
+     int s[10];
+  } k[10];
+};
+
+int main() {
+    return 0;
+}
