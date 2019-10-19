@@ -1,4 +1,4 @@
-struct Student{
+struct Student {
 	int id;
 	int weight;
 	int grades;

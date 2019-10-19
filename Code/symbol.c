@@ -30,7 +30,7 @@ bool setSymbolName(Symbol* s, char* name) {
 	printf("When setting symbol name, this symbol already has a name.\n");
         return false;
     }
-    s->name = (char*) malloc(sizeof(char) * strlen(name));
+    s->name = (char*) malloc(sizeof(char) * strlen(name) + 1);
     if (s->name == NULL) {
 	printf("When setting symbol name, memory allocation error.\n");
         return false;
@@ -46,7 +46,7 @@ bool setSymbolType(Symbol* s, SymbolTypes type) {
 	return false;
     }
     if (s->symbol_type != 0) {
-	printf("When setting symbol type, this symbol already has a type.\n");
+	printf("When setting symbol(%s) type, this symbol already has a type %d.\n", s->name, s->symbol_type);
         return false;
     }
     s->symbol_type = type;
@@ -87,8 +87,8 @@ bool addArrayDimension(Symbol* s, int size) {
     } else if (s->array_content->dimensions > 0 && s->array_content->size != NULL){
 	s->array_content->dimensions++;
   	int* temp = (int*) malloc(sizeof(int) * s->array_content->dimensions);
-	temp[s->array_content->dimensions-1] = size;
-	memcpy(temp, s->array_content->size, s->array_content->dimensions * sizeof(int) - sizeof(int));
+	temp[0] = size;
+	memcpy(&temp[1], s->array_content->size, s->array_content->dimensions * sizeof(int) - sizeof(int));
 	free(s->array_content->size);
 	s->array_content->size = temp;
 	return true;
@@ -111,11 +111,12 @@ bool setArrayType(Symbol* s, ValueTypes type, char* name) {
 	s->array_content->type = type;
     } else {
 	s->array_content->type = type;
-	if (!isContain(symbolTable, name)) {
+        Symbol* struct_def = get(symbolTable, name);
+	if (struct_def == NULL || struct_def->symbol_type != STRUCT_TYPE_SYMBOL) {
 	    printf("When setting array type, this type doesn't exist.\n");
 	    return false;
 	}
-	s->array_content->typeName = (char*) malloc(sizeof(char) * strlen(name));
+	s->array_content->typeName = (char*) malloc(sizeof(char) * strlen(name) + 1);
 	strcpy(s->array_content->typeName, name);
     }
     return true;
@@ -134,11 +135,12 @@ bool setFuncReturnValue(Symbol* s, ValueTypes type, char* name) {
 	s->func_content->retType = type;
     } else {
 	s->func_content->retType = type;
-	if (!isContain(symbolTable, name)) {
+	Symbol* struct_def = get(symbolTable, name);
+	if (struct_def == NULL || struct_def->symbol_type != STRUCT_TYPE_SYMBOL) {
 	    printf("When setting func return value, this type doesn't exist.\n");
 	    return false;
 	}
-	s->func_content->typeName = (char*) malloc(sizeof(char) * strlen(name));
+	s->func_content->typeName = (char*) malloc(sizeof(char) * strlen(name) + 1);
 	strcpy(s->func_content->typeName, name);
     }
     return true;
@@ -159,7 +161,7 @@ bool addFuncArgument(Symbol* s, char* name) {
     }
     if (s->func_content->arguments == NULL) {
 	s->func_content->arguments = (Argument*) malloc(sizeof(Argument));
-	s->func_content->arguments->name = (char*) malloc(sizeof(char) * strlen(name));
+	s->func_content->arguments->name = (char*) malloc(sizeof(char) * strlen(name) + 1);
 	strcpy(s->func_content->arguments->name,name);
 	s->func_content->arguments->next = NULL;
     } else {
@@ -168,7 +170,7 @@ bool addFuncArgument(Symbol* s, char* name) {
 	    p = p->next;
 	}
         Argument* temp = (Argument*) malloc(sizeof(Argument));
-	temp->name = (char*) malloc(sizeof(char) * strlen(name));
+	temp->name = (char*) malloc(sizeof(char) * strlen(name) + 1);
 	strcpy(temp->name,name);
 	temp->next = NULL;
 	p->next = temp;
@@ -185,11 +187,12 @@ bool setStructValueType(Symbol* s, char* name) {
 	printf("When setting struct value type, this symbol content pointer is NULL.\n");
 	return false;
     }
-    if (!isContain(symbolTable, name)) {
-	printf("When setting struct value type, this struct type doesn't exist.\n");
+    Symbol* struct_def = get(symbolTable, name);
+    if (struct_def == NULL || struct_def->symbol_type != STRUCT_TYPE_SYMBOL) {
+	printf("When setting struct value, this type doesn't exist.\n");
 	return false;
     }
-    s->struct_value->typeName = (char*) malloc(sizeof(char) * strlen(name));
+    s->struct_value->typeName = (char*) malloc(sizeof(char) * strlen(name) + 1);
     strcpy(s->struct_value->typeName,name);
     return true;
 }
@@ -209,7 +212,7 @@ bool addStructTypeField(Symbol* s, char* name) {
     }
     if (s->struct_def->fields == NULL) {
 	s->struct_def->fields = (Field*) malloc(sizeof(Field));
-	s->struct_def->fields->name = (char*) malloc(sizeof(char) * strlen(name));
+	s->struct_def->fields->name = (char*) malloc(sizeof(char) * strlen(name) + 1);
 	strcpy(s->struct_def->fields->name,name);
 	s->struct_def->fields->next = NULL;
     } else {
@@ -218,7 +221,7 @@ bool addStructTypeField(Symbol* s, char* name) {
 	    p = p->next;
 	}
         Field* temp = (Field*) malloc(sizeof(Field));
-	temp->name = (char*) malloc(sizeof(char) * strlen(name));
+	temp->name = (char*) malloc(sizeof(char) * strlen(name) + 1);
 	strcpy(temp->name,name);
 	temp->next = NULL;
 	p->next = temp;
@@ -226,7 +229,19 @@ bool addStructTypeField(Symbol* s, char* name) {
     return true;
 }
 
+char* valueTypesToString(ValueTypes type) {
+    switch (type) {
+	case _INT_TYPE_: return "INT";
+      	case _FLOAT_TYPE_: return "FLOAT";
+	case _ARRAY_TYPE_: return "ARRAY";
+	case _STRUCT_TYPE_: return "STRUCT";
+        default: return "NONE";
+    }
+}
+
+
 bool outputSymbol(Symbol* s) {
+    printf("----------------------------------\n");
     if (s == NULL) {
 	printf("When outputting symbol, this symbol pointer is NULL.\n");
 	return false;
@@ -238,14 +253,38 @@ bool outputSymbol(Symbol* s) {
 	return false;
     }
 
-    switch (s->symbol_type) {
-        case INT_SYMBOL: printf("Symbol type: INT\n"); break;
-        case FLOAT_SYMBOL: printf("Symbol type: FLOAT\n"); break;
-        case FUNC_SYMBOL: printf("Symbol type: FUNC\n");break;
-        case ARRAY_SYMBOL: printf("Symbol type: ARRAY\n");break;
-        case STRUCT_TYPE_SYMBOL:printf("Symbol type: STRUCTTYPE\n");break;
-        case STRUCT_VAL_SYMBOL:printf("Symbol type: STRUCTVALUE\n");break;
-	default: printf("wrong type.\n"); return false;
+    
+    if (s->symbol_type == INT_SYMBOL) {
+	printf("Symbol type: INT\n");
+    } else if (s->symbol_type == FLOAT_SYMBOL) {
+	printf("Symbol type: FLOAT\n");
+    } else if (s->symbol_type == FUNC_SYMBOL) {
+	printf("Symbol type: FUNC\n");
+	if (s->func_content->retType == _STRUCT_TYPE_) {
+	    printf("Return Type: %s %s\n", valueTypesToString(s->func_content->retType), s->func_content->typeName);
+        } else {
+	    printf("Return Type: %s\n", valueTypesToString(s->func_content->retType));
+        }
+
+    } else if (s->symbol_type == ARRAY_SYMBOL) {
+	printf("Symbol type: ARRAY\n");
+        if (s->array_content->type == _STRUCT_TYPE_) {
+	    printf("Element Type: %s %s\n", valueTypesToString(s->array_content->type), s->array_content->typeName);
+        } else {
+	    printf("Element Type: %s\n", valueTypesToString(s->array_content->type));
+        }
+        printf("Array dimensions: \n");
+        for (int i = 0; i < s->array_content->dimensions; i++) {
+	    printf("%d ", s->array_content->size[i]);
+        }
+	printf("\n");
+    } else if (s->symbol_type == STRUCT_TYPE_SYMBOL) {
+
+    } else if (s->symbol_type == STRUCT_VAL_SYMBOL) {
+
+    } else {
+	printf("wrong type.\n"); 
+	return false;
     }
     return true; 
 }

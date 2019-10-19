@@ -99,6 +99,7 @@ bool setFuncReturnValue(Symbol* s, ValueTypes type, char* name);
 bool addFuncArgument(Symbol* s, char* name);
 bool setStructValueType(Symbol* s, char* name);
 bool addStructTypeField(Symbol* s, char* name);
+char* valueTypesToString(ValueTypes type);
 
 bool outputSymbol(Symbol* s);
 #endif

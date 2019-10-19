@@ -11,7 +11,7 @@ extern int lexical_correct;
 extern HashSet* symbolTable;
 
 int main(int argc, char** argv) {
-    /*if(argc <= 1) {
+    if(argc <= 1) {
         printf("pass filename to scanner\n");
         return -1;
     }
@@ -23,11 +23,15 @@ int main(int argc, char** argv) {
         }
         yyrestart(f);
         yyparse();
-        if(syntax_correct && lexical_correct) 
-            printGrammarTree(root, 0);
+        if(syntax_correct && lexical_correct) {
+            symbolTable = initializeHashSet(HASH_SIZE);
+	    printTotalGrammarTree(root, 0);
+            handleProgram(root);
+            outputHashSet(symbolTable);
+        }
         destructMorpheme(root);
         return 0;
-    }*/
+    }
     /*
     char s1[] = "asadb";
     char s2[] = "abc";
@@ -44,7 +48,7 @@ int main(int argc, char** argv) {
     printf("%s\n", p->name);
     printf("%d\n", insert(set, s));*/
 
-    symbolTable = initializeHashSet(HASH_SIZE);
+    /*symbolTable = initializeHashSet(HASH_SIZE);
     Symbol* s1 = createSymbol();
     setSymbolName(s1, "main");
     setSymbolType(s1, FUNC_SYMBOL);
@@ -73,5 +77,5 @@ int main(int argc, char** argv) {
     setSymbolType(s6, INT_SYMBOL);
     insert(symbolTable, s6);
 
-    outputHashSet(symbolTable);
+    outputHashSet(symbolTable);*/
 }

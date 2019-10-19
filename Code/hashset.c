@@ -30,11 +30,11 @@ unsigned int pjwHash(char* str) {
 
 bool isContain(HashSet* hashSet, char* name) {
     if (hashSet == NULL) {
-        printf("the hash set is NULL\n");
+        printf("\033[31mthe hash set is NULL\n\033[0m");
         return false;
     }
     if (name == NULL) {
-        printf("the name is NULL\n");
+        printf("\033[31mthe name is NULL\n\033[0m");
         return false;
     }
 
@@ -52,11 +52,11 @@ bool isContain(HashSet* hashSet, char* name) {
 
 Symbol* get(HashSet* hashSet, char* name) {
     if (name == NULL) {
-        printf("the name is NULL\n");
-        return false;
+        printf("\033[31mthe name is NULL\n\033[0m");
+        return NULL;
     }
     if (hashSet == NULL) {
-        printf("the hash set is NULL\n");
+        printf("\033[31mthe hash set is NULL\n\033[0m");
         return NULL;
     }
 
@@ -74,12 +74,13 @@ Symbol* get(HashSet* hashSet, char* name) {
 
 bool insert(HashSet* hashSet, Symbol* symbol) {
     if (symbol->name == NULL) {
-        printf("the name is NULL\n");
+        printf("\033[31mthe name is NULL\n\033[0m");
         return false;
     }
     if (isContain(hashSet, symbol->name)) {
         return false;
     } else {
+        //printf("inserting %s\n", symbol->name);
         unsigned int val = pjwHash(symbol->name) % HASH_SIZE;
         symbol->next = hashSet->buckets[val].head;
         hashSet->buckets[val].head = symbol;

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #ifndef __TREE_H_
 #define __TREE_H_
 #define MAX_CHILDREN_NUMBER 8
@@ -54,4 +55,5 @@ Morpheme* createMorpheme(Types type);
 void nodeGrowth(Morpheme* father, int n, ...);
 void printGrammarTree(Morpheme* root, int depth);
 void destructMorpheme(Morpheme* morpheme);
+const char* typeToString(Types type);
 #endif
