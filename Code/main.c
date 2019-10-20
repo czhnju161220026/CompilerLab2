@@ -3,6 +3,7 @@
 #include "semantic.h"
 #include "symbol.h"
 #include "hashset.h"
+#include "log.h"
 extern void yyrestart(FILE*);
 extern void yyparse(void);
 extern Morpheme* root;
@@ -25,8 +26,10 @@ int main(int argc, char** argv) {
         yyparse();
         if(syntax_correct && lexical_correct) {
             symbolTable = initializeHashSet(HASH_SIZE);
+            SemanticAnalysisLog = initLog();
 	    printTotalGrammarTree(root, 0);
             handleProgram(root);
+            outputLog(SemanticAnalysisLog);
             outputHashSet(symbolTable);
         }
         destructMorpheme(root);
