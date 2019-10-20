@@ -265,12 +265,6 @@ bool outputSymbol(Symbol* s) {
         } else {
 	    printf("Return Type: %s\n", valueTypesToString(s->func_content->retType));
         }
-        printf("Arguments: \n");
-        Argument* a = s->func_content->arguments;
-        while (a != NULL) {
-            printf("\t%s\n", a->name);
-            a = a->next;
-        }
 
     } else if (s->symbol_type == ARRAY_SYMBOL) {
 	printf("Symbol type: ARRAY\n");

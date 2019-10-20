@@ -21,7 +21,4 @@ bool handleDec(Morpheme* root, Symbol* s);
 bool handleFunDec(Morpheme* root, Symbol* s);
 bool handleVarList(Morpheme* root, Symbol* s);
 bool handleParamDec(Morpheme* root, Symbol* s);
-bool handleCompSt(Morpheme* root);
-bool handleStmtList(Morpheme* root);
-bool handleStmt(Morpheme* root);
 #endif

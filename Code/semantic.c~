@@ -759,7 +759,7 @@ bool handleStmt(Morpheme* root) {
 	return false;
     }
 
-    if (root->type != _Stmt) {
+    if (root->type != _StmtList) {
 	printf("\033[31mwhen handling Stmt, this node is not Stmt.\n\033[0m");
 	return false;
     }
