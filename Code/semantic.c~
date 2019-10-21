@@ -598,11 +598,12 @@ bool handleDec(Morpheme* root, Symbol* s, Symbol* field) {
     if (c->type == _VarDec && c->siblings != NULL && c->siblings->type == _ASSIGNOP && c->siblings->siblings != NULL 
         && c->siblings->siblings->type == _Exp) {
         addLogInfo(SemanticAnalysisLog, "Going to handle Exp!!!.\n");
-        if (s != NULL) {
+        //if (s != NULL) {
             reportError(SemanticError, 15, c->lineNumber, "Cannot initialize a field in definition of a struct");
-        }
+        //}
         return handleVarDec(c, field);
     } else if (c->type == _VarDec && c->siblings == NULL) {
+        addLogInfo(SemanticAnalysisLog, "Going to handle Exp!!.\n");
         return handleVarDec(c, field);
     } else {
         addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling Dec, this Dec has a wrong child .\n\033[0m");

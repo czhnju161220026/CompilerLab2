@@ -1,0 +1,25 @@
+struct Student
+{
+   int age;
+   float grade;
+};
+
+struct Teacher
+{
+   int a, b , c;
+   float g, h, f;
+   int aa = 1;
+   struct Book {
+      int page;
+      float price;
+      struct Writer {
+          int id;
+      } writer;
+   } book;
+} as;
+
+struct Student student;
+
+int main() {
+    return 0;
+}

@@ -1,13 +1,13 @@
 struct Apple{
 	int size;
-	int price = 1;
+	int price;
 };
 
 struct Apples{
 	struct Apple a[100];
 	struct Bucket{
 		struct base {
-			int s = 2;
+			int s;
 			float t;
 		}bb;
 		int p;
@@ -18,6 +18,5 @@ int main() {
 	struct Product {
 		struct Apples app = lots;
 	}pro;
-        int i = 3;
 	return 0;
 }

@@ -1,4 +1,5 @@
 #include "grammarTree.h"
+#include <stdbool.h>
 
 const char *const TYPES_NAME_TABLE[] = 
 {

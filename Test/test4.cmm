@@ -1,0 +1,15 @@
+int func(int aa, int bb) {
+    int cc = aa + bb;
+    return cc;
+}
+
+int main()
+{
+    int a = 0;
+    int b[10];
+    float c, d, e[5][4];
+    struct St {int age; float grade;} student;
+    if (a) {int x = a + 1;} else {int y = 11;}
+    while (a) {x = x - 1;}
+    return 0;
+}

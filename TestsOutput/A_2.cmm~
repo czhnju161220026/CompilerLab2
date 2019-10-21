@@ -15,6 +15,6 @@ int newStudent(int a, int b) {
 int main() {
 	int k = 3;
 	int p = 14;
-	newStdent(k, p);
+	newStdent(k, p); //newStdent is undefined
 	return 0;
 }

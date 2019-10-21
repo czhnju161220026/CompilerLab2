@@ -1,13 +1,13 @@
 struct Apple{
 	int size;
-	int price = 1;
+	int price = 9;
 };
 
 struct Apples{
 	struct Apple a[100];
 	struct Bucket{
 		struct base {
-			int s = 2;
+			int s = 1;
 			float t;
 		}bb;
 		int p;
@@ -16,8 +16,8 @@ struct Apples{
 
 int main() {
 	struct Product {
-		struct Apples app = lots;
+		struct Apples app = lots; //Type: 15, Line: 19. cannot initialize in definition of struct
 	}pro;
-        int i = 3;
+        int i = 9;
 	return 0;
 }

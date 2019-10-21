@@ -1,0 +1,14 @@
+struct Food {
+	int cal;
+	int name, price;
+	float name1;
+};
+
+int main() {
+	struct person {
+		struct Food burger;
+		int age;
+		float time, burger; //Type: 15, Line:11. field burger has been used
+	}p;
+	return 0;
+}
