@@ -17,7 +17,7 @@ bool handleVarDec(Morpheme* root, Symbol* s);
 bool handleDefList(Morpheme* root, Symbol* s);
 bool handleDef(Morpheme* root, Symbol* s);
 bool handleDecList(Morpheme* root, Symbol* s, ValueTypes* type, char** name);
-bool handleDec(Morpheme* root, Symbol* s);
+bool handleDec(Morpheme* root, Symbol* s, Symbol* field);
 bool handleFunDec(Morpheme* root, Symbol* s);
 bool handleVarList(Morpheme* root, Symbol* s);
 bool handleParamDec(Morpheme* root, Symbol* s);

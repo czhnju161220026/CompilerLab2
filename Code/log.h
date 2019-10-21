@@ -16,6 +16,7 @@ extern Log* SemanticAnalysisLog;
 Log* initLog();
 bool addLogInfo(Log* log, char* content);
 bool outputLog(Log* log);
+bool reportError(Log* log, int type, int line, char* message);
 
 
 #endif
