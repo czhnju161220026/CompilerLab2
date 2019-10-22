@@ -1,0 +1,16 @@
+int func() {
+    int redef_L102;
+    int redef_L102;
+    int i;
+    if (i) {
+        int j;
+        int j;
+    } else {
+        float a;
+    }
+}
+
+int main() {
+    int i;
+    
+}

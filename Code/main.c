@@ -28,10 +28,10 @@ int main(int argc, char** argv) {
             symbolTable = initializeHashSet(HASH_SIZE);
             SemanticAnalysisLog = initLog();
             SemanticError = initLog();
-	    printTotalGrammarTree(root, 0);
+	    //printTotalGrammarTree(root, 0);
             handleProgram(root);
-            outputLog(SemanticAnalysisLog);
-            outputHashSet(symbolTable);
+            //outputLog(SemanticAnalysisLog);
+            //outputHashSet(symbolTable);
             outputLog(SemanticError);
         }
         destructMorpheme(root);

@@ -57,6 +57,6 @@ bool outputLog(Log* log) {
 
 bool reportError(Log* log, int type, int line, char* message) {
     char str[256];
-    sprintf(str, "Error type %d at Line %d: %s.\n", type, line, message);
+    sprintf(str, "Error Type %d at Line %d: %s.\n", type, line, message);
     return addLogInfo(log, str);
 }
