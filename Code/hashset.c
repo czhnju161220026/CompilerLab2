@@ -1,25 +1,30 @@
 #include "hashset.h"
 #include "symbol.h"
-HashSet* symbolTable = NULL;
-HashSet* initializeHashSet(int size) {
-    HashSet* hashSet = (HashSet*) malloc(sizeof(HashSet));
-    if (hashSet == NULL) {
+HashSet *symbolTable = NULL;
+HashSet *initializeHashSet(int size)
+{
+    HashSet *hashSet = (HashSet *)malloc(sizeof(HashSet));
+    if (hashSet == NULL)
+    {
         return NULL;
     }
     hashSet->size = size;
-    hashSet->buckets = (Bucket*) malloc(sizeof(Bucket) * size);
-    for (int i = 0; i < size; i++) {
+    hashSet->buckets = (Bucket *)malloc(sizeof(Bucket) * size);
+    for (int i = 0; i < size; i++)
+    {
         hashSet->buckets[i].head = NULL;
     }
 
     return hashSet;
 }
 
-unsigned int pjwHash(char* str) {
-    str = (unsigned char*) str;
+unsigned int pjwHash(char *str)
+{
+    str = (unsigned char *)str;
     unsigned int val = 0;
     unsigned int i;
-    for (; *str; ++str) {
+    for (; *str; ++str)
+    {
         val = (val << 2) + *str;
         if (i = val & ~0x3fff)
             val = (val ^ (i >> 12)) & 0x3fff;
@@ -28,20 +33,25 @@ unsigned int pjwHash(char* str) {
     return val;
 }
 
-bool isContain(HashSet* hashSet, char* name) {
-    if (hashSet == NULL) {
+bool isContain(HashSet *hashSet, char *name)
+{
+    if (hashSet == NULL)
+    {
         printf("\033[31mthe hash set is NULL\n\033[0m");
         return false;
     }
-    if (name == NULL) {
+    if (name == NULL)
+    {
         printf("\033[31mthe name is NULL\n\033[0m");
         return false;
     }
 
     unsigned int val = pjwHash(name) % HASH_SIZE;
-    Symbol* head = hashSet->buckets[val].head;
-    while (head != NULL) {
-        if (strcmp(name, head->name) == 0) {
+    Symbol *head = hashSet->buckets[val].head;
+    while (head != NULL)
+    {
+        if (strcmp(name, head->name) == 0)
+        {
             return true;
         }
         head = head->next;
@@ -50,20 +60,25 @@ bool isContain(HashSet* hashSet, char* name) {
     return false;
 }
 
-Symbol* get(HashSet* hashSet, char* name) {
-    if (name == NULL) {
+Symbol *get(HashSet *hashSet, char *name)
+{
+    if (name == NULL)
+    {
         printf("\033[31mthe name is NULL\n\033[0m");
         return NULL;
     }
-    if (hashSet == NULL) {
+    if (hashSet == NULL)
+    {
         printf("\033[31mthe hash set is NULL\n\033[0m");
         return NULL;
     }
 
     unsigned int val = pjwHash(name) % HASH_SIZE;
-    Symbol* head = hashSet->buckets[val].head;
-    while (head != NULL) {
-        if (strcmp(name, head->name) == 0) {
+    Symbol *head = hashSet->buckets[val].head;
+    while (head != NULL)
+    {
+        if (strcmp(name, head->name) == 0)
+        {
             return head;
         }
         head = head->next;
@@ -72,14 +87,19 @@ Symbol* get(HashSet* hashSet, char* name) {
     return NULL;
 }
 
-bool insert(HashSet* hashSet, Symbol* symbol) {
-    if (symbol->name == NULL) {
+bool insert(HashSet *hashSet, Symbol *symbol)
+{
+    if (symbol->name == NULL)
+    {
         printf("\033[31mthe name is NULL\n\033[0m");
         return false;
     }
-    if (isContain(hashSet, symbol->name)) {
+    if (isContain(hashSet, symbol->name))
+    {
         return false;
-    } else {
+    }
+    else
+    {
         //printf("inserting %s\n", symbol->name);
         unsigned int val = pjwHash(symbol->name) % HASH_SIZE;
         symbol->next = hashSet->buckets[val].head;
@@ -88,12 +108,15 @@ bool insert(HashSet* hashSet, Symbol* symbol) {
     }
 }
 
-void outputHashSet(HashSet* hashSet) {
-    for (int i = 0; i < hashSet->size; i++) {
-	Symbol* p = hashSet->buckets[i].head;
-	while (p != NULL) {
-	    outputSymbol(p);
-	    p = p -> next;
-	}
+void outputHashSet(HashSet *hashSet)
+{
+    for (int i = 0; i < hashSet->size; i++)
+    {
+        Symbol *p = hashSet->buckets[i].head;
+        while (p != NULL)
+        {
+            outputSymbol(p);
+            p = p->next;
+        }
     }
 }
