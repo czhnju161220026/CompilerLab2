@@ -494,3 +494,10 @@ bool isField(StructTypeContent* s, char* fieldName) {
 
     return true;
 }
+
+//如果fieldName是struct的field，返回filed*
+//否则返回NULL
+Field* getField(StructTypeContent* s, char* fieldName) {
+
+}
+

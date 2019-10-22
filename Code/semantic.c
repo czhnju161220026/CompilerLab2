@@ -1437,20 +1437,44 @@ bool handleExp(Morpheme *root, ExpType *expType)
     {
         ExpType *childType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c, childType);
-        if(childType->type != _STRUCT_TYPE_) {
+        if (childType->type != _STRUCT_TYPE_)
+        {
             reportError(SemanticError, 13, c->lineNumber, "Type mismatch"); //DOT操作符的左操作数只能是struct
             return false;
         }
         // check whether id is the field of struct
-        StructTypeContent* s = get(symbolTable, childType->typeName)->struct_def;
-        char* fieldName = c->siblings->siblings->idName;
-        if(!isField(s, fieldName)) {
-            reportError(SemanticError, 14, c->lineNumber, "Undefined field"); //DOT操作符的左操作数只能是struct
+        StructTypeContent *s = get(symbolTable, childType->typeName)->struct_def;
+        char *fieldName = c->siblings->siblings->idName;
+        Field *f = getField(s, fieldName);
+        if (f == NULL)
+        {
+            reportError(SemanticError, 14, c->lineNumber, "Undefined field"); //未定义的域
             return false;
         }
         //pass
         //int,float,struct可以作为左值, array不行
-        
-
+        Symbol *fs = get(symbolTable, f->name);
+        switch (fs->symbol_type)
+        {
+        case INT_SYMBOL:
+            expType->type = _INT_TYPE_;
+            expType->leftValue = true;
+            break;
+        case FLOAT_SYMBOL:
+            expType->type = _FLOAT_TYPE_;
+            expType->leftValue = true;
+            break;
+        case ARRAY_SYMBOL:
+            expType->type = _ARRAY_TYPE_;
+            expType->leftValue = false;
+            expType->arrayContent = fs->array_content;
+            break;
+        case STRUCT_VAL_SYMBOL:
+            expType->type = _STRUCT_TYPE_;
+            expType->leftValue = true;
+            expType->typeName = fs->struct_value->typeName;
+            break;
+        }
+        return true;
     }
 }
