@@ -357,6 +357,10 @@ bool handleTag(Morpheme *root, char **name)
             {
                 reportError(SemanticError, 17, c->lineNumber, "This struct type is undefined");
             }
+            else if (get(symbolTable, c->idName)->symbol_type != STRUCT_TYPE_SYMBOL)
+            {
+                reportError(SemanticError, 17, c->lineNumber, "This struct type is undefined");
+            }
             return true;
         }
         else
@@ -782,8 +786,12 @@ bool handleDec(Morpheme *root, Symbol *s, Symbol *field)
         if (s != NULL)
         {
             reportError(SemanticError, 15, c->lineNumber, "Cannot initialize a field in definition of a struct");
+            return handleVarDec(c, field);
         }
-        return handleVarDec(c, field);
+        else
+        {
+            handleVarDec(c, field);
+        }
     }
     else if (c->type == _VarDec && c->siblings == NULL)
     {
@@ -1049,7 +1057,10 @@ bool handleStmt(Morpheme *root)
     if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _SEMI)
     {
         //Stmt := Exp SEMI
+        //TODO : 确定Exp的类型
         addLogInfo(SemanticAnalysisLog, "Going to handle Exp.\n");
+        ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, expType);
         return true;
     }
     else if (c->type == _CompSt)
@@ -1059,9 +1070,13 @@ bool handleStmt(Morpheme *root)
     else if (c->type == _RETURN && c->siblings != NULL && c->siblings->type == _Exp && c->siblings->siblings != NULL && c->siblings->siblings->type == _SEMI)
     {
         //Stmt := RETURN Exp SEMI
+        // TODO
         addLogInfo(SemanticAnalysisLog, "Going to handle Exp.\n");
+        ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c->siblings, expType);
         return true;
     }
+    //注意条件表达式只能是INT
     else if (c->type == _WHILE && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->siblings->type == _Stmt)
     {
         return handleStmt(c->siblings->siblings->siblings->siblings);
@@ -1083,4 +1098,359 @@ bool handleStmt(Morpheme *root)
         return false;
     }
     return true;
+}
+
+bool handleExp(Morpheme *root, ExpType *expType)
+{
+    if (root == NULL)
+    {
+        addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling Exp, this Exp is NULL.\n\033[0m");
+        return false;
+    }
+
+    if (root->type != _Exp)
+    {
+        addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling Exp, this node is not Exp.\n\033[0m");
+        return false;
+    }
+    addLogInfo(SemanticAnalysisLog, "\033[32mStart handling Exp.\n\033[0m");
+
+    Morpheme *c = root->child;
+    //错误处理
+    if (c == NULL)
+    {
+        addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling Exp, child node is NULL .\n\033[0m");
+        return false;
+    }
+    // case : EXP->ID
+    else if (c->type == _ID && c->siblings == NULL)
+    {
+        //printf("Exp->id\n");
+        char *idName = c->idName;
+        if (!isContain(symbolTable, idName))
+        {
+            reportError(SemanticError, 1, c->lineNumber, "Undefined ID");
+            return false;
+        }
+        else
+        {
+            Symbol *s = get(symbolTable, idName);
+            switch (s->symbol_type)
+            {
+            case INT_SYMBOL:
+                expType->type = _INT_TYPE_;
+                expType->leftValue = true;
+                break;
+            case FLOAT_SYMBOL:
+                expType->type = _FLOAT_TYPE_;
+                expType->leftValue = true;
+                break;
+            case ARRAY_SYMBOL:
+                expType->type = _ARRAY_TYPE_;
+                expType->leftValue = true;
+                expType->arrayContent = s->array_content;
+                break;
+            case STRUCT_VAL_SYMBOL:
+                expType->type = _STRUCT_TYPE_;
+                expType->leftValue = true;
+                expType->typeName = s->struct_value->typeName;
+                break;
+            case STRUCT_TYPE_SYMBOL:
+                reportError(SemanticError, 1, c->lineNumber, "Illegal ID");
+                return false;
+            }
+            return true;
+        }
+    }
+    // case : EXP->INT
+    else if (c->type == _INT && c->siblings == NULL)
+    {
+        //printf("Exp -> int\n");
+        expType->type = _INT_TYPE_;
+        expType->leftValue = false;
+        return true;
+    }
+    // case : EXP->FLOAT
+    else if (c->type == _FLOAT && c->siblings == NULL)
+    {
+        expType->type = _FLOAT_TYPE_;
+        expType->leftValue = false;
+        return true;
+    }
+    // case : EXP->EXP ASSIGNOP EXP
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _ASSIGNOP && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("Exp -> Exp = Exp\n");
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, type1);
+        handleExp(c->siblings->siblings, type2);
+        if (!type1->leftValue)
+        {
+            reportError(SemanticError, 6, c->lineNumber, "Expression cannot be right value");
+            return false;
+        }
+        //check type
+        if (type1->type == _ARRAY_TYPE_ || type2->type == _ARRAY_TYPE_)
+        {
+            reportError(SemanticError, 5, c->lineNumber, "Wrong use of array");
+            return false;
+        }
+        else if (!expTpyeEqual(type1, type2))
+        {
+            reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
+            return false;
+        }
+        //pass
+        expType->leftValue = false;
+        expType->type = type1->type;
+        expType->typeName = type1->typeName;
+        return true;
+    }
+    // case : EXP->EXP PLUS EXP
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _PLUS && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("EXP -> EXP + EXP\n");
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, type1);
+        handleExp(c->siblings->siblings, type2);
+        //check type
+        //加法算式中，加法两边不能是数组和结构体
+        if (type1->type == _ARRAY_TYPE_ || type2->type == _ARRAY_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of array");
+            return false;
+        }
+        if (type1->type == _STRUCT_TYPE_ || type2->type == _STRUCT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of struct");
+            return false;
+        }
+        else if (!expTpyeEqual(type1, type2))
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch");
+            return false;
+        }
+        //pass
+        expType->leftValue = false;
+        expType->type = type1->type;
+        return true;
+    }
+    // case : EXP->EXP MINUS EXP
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _MINUS && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("EXP -> EXP - EXP\n");
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, type1);
+        handleExp(c->siblings->siblings, type2);
+        //check type
+        //减法算式中，加法两边不能是数组和结构体
+        if (type1->type == _ARRAY_TYPE_ || type2->type == _ARRAY_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of array");
+            return false;
+        }
+        if (type1->type == _STRUCT_TYPE_ || type2->type == _STRUCT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of struct");
+            return false;
+        }
+        else if (!expTpyeEqual(type1, type2))
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch");
+            return false;
+        }
+        //pass
+        expType->leftValue = false;
+        expType->type = type1->type;
+        return true;
+    }
+    // case : EXP->EXP STAR EXP
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _STAR && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("EXP -> EXP * EXP\n");
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, type1);
+        handleExp(c->siblings->siblings, type2);
+        //check type
+        //乘法算式中，加法两边不能是数组和结构体
+        if (type1->type == _ARRAY_TYPE_ || type2->type == _ARRAY_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of array");
+            return false;
+        }
+        if (type1->type == _STRUCT_TYPE_ || type2->type == _STRUCT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of struct");
+            return false;
+        }
+        else if (!expTpyeEqual(type1, type2))
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch");
+            return false;
+        }
+        //pass
+        expType->leftValue = false;
+        expType->type = type1->type;
+        return true;
+    }
+    // case : EXP->EXP DIV EXP
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _DIV && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("EXP->EXP - EXP\n");
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, type1);
+        handleExp(c->siblings->siblings, type2);
+        //check type
+        //除法算式中，加法两边不能是数组和结构体
+        if (type1->type == _ARRAY_TYPE_ || type2->type == _ARRAY_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of array");
+            return false;
+        }
+        if (type1->type == _STRUCT_TYPE_ || type2->type == _STRUCT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of struct");
+            return false;
+        }
+        else if (!expTpyeEqual(type1, type2))
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch");
+            return false;
+        }
+        //pass
+        expType->leftValue = false;
+        expType->type = type1->type;
+        return true;
+    }
+    // case : EXP->EXP RELOP EXP
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _RELOP && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("EXP->EXP relop EXP\n");
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, type1);
+        handleExp(c->siblings->siblings, type2);
+        //check type
+        //relop算式中，加法两边不能是数组和结构体
+        if (type1->type == _ARRAY_TYPE_ || type2->type == _ARRAY_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of array");
+            return false;
+        }
+        if (type1->type == _STRUCT_TYPE_ || type2->type == _STRUCT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Wrong use of struct");
+            return false;
+        }
+        else if (!expTpyeEqual(type1, type2))
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch");
+            return false;
+        }
+        //pass
+        expType->leftValue = false;
+        expType->type = type1->type;
+        return true;
+    }
+    // case : EXP-> EXP AND EXP
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _AND && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("EXP->EXP && EXP\n");
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, type1);
+        handleExp(c->siblings->siblings, type2);
+        //check type
+        //‘与’运算中，两个操作数都要是INT
+        if (type1->type != _INT_TYPE_ || type2->type != _INT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch");
+            return false;
+        }
+        //pass
+        expType->leftValue = false;
+        expType->type = _INT_TYPE_;
+        return true;
+    }
+    // case : EXP-> EXP OR EXP
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _OR && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("EXP->EXP || EXP\n");
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, type1);
+        handleExp(c->siblings->siblings, type2);
+        //check type
+        //‘或’运算中，两个操作数都要是INT
+        if (type1->type != _INT_TYPE_ || type2->type != _INT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch");
+            return false;
+        }
+        //pass
+        expType->leftValue = false;
+        expType->type = _INT_TYPE_;
+        return true;
+    }
+    // case : EXP -> LP EXP RP
+    else if (c->type == _LP && c->siblings != NULL && c->siblings->type == _Exp && c->siblings->siblings != NULL && c->siblings->siblings->type == _RP && c->siblings->siblings->siblings == NULL)
+    {
+        return handleExp(c->siblings, expType);
+    }
+    // case : EXP -> MINUS EXP
+    else if (c->type == _MINUS && c->siblings != NULL && c->siblings->type == _Exp && c->siblings->siblings == NULL)
+    {
+        ExpType *childType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c->siblings, childType);
+        if (childType->type != _INT_TYPE_ || childType->type != _FLOAT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch"); //取负操作符的操作数只能是int或者float
+            return false;
+        }
+        //pass
+        expType->type = childType->type;
+        expType->leftValue = false;
+        return true;
+    }
+    // case : EXP -> NOT EXP
+    else if (c->type == _NOT && c->siblings != NULL && c->siblings->type == _Exp && c->siblings->siblings == NULL)
+    {
+        ExpType *childType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c->siblings, childType);
+        if (childType->type != _INT_TYPE_)
+        {
+            reportError(SemanticError, 7, c->lineNumber, "Type mismatch"); //NOT操作符的操作数只能是int
+            return false;
+        }
+        //pass
+        expType->type = _INT_TYPE_;
+        expType->leftValue = false;
+        return true;
+    }
+    // case : EXP -> EXP DOT ID
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _DOT && c->siblings->siblings != NULL && c->siblings->siblings->type == _ID && c->siblings->siblings->siblings == NULL)
+    {
+        ExpType *childType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, childType);
+        if(childType->type != _STRUCT_TYPE_) {
+            reportError(SemanticError, 13, c->lineNumber, "Type mismatch"); //DOT操作符的左操作数只能是struct
+            return false;
+        }
+        // check whether id is the field of struct
+        StructTypeContent* s = get(symbolTable, childType->typeName)->struct_def;
+        char* fieldName = c->siblings->siblings->idName;
+        if(!isField(s, fieldName)) {
+            reportError(SemanticError, 14, c->lineNumber, "Undefined field"); //DOT操作符的左操作数只能是struct
+            return false;
+        }
+        //pass
+        //int,float,struct可以作为左值, array不行
+        
+
+    }
 }

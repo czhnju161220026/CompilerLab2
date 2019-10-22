@@ -2,6 +2,7 @@
 #define __SEMACTIC_H_
 #include "hashset.h"
 #include "grammarTree.h"
+#include "symbol.h"
 void printTotalGrammarTree(Morpheme *root, int depth);
 
 bool handleProgram(Morpheme *root);
@@ -24,4 +25,5 @@ bool handleParamDec(Morpheme *root, Symbol *s);
 bool handleCompSt(Morpheme *root);
 bool handleStmtList(Morpheme *root);
 bool handleStmt(Morpheme *root);
+bool handleExp(Morpheme* root, ExpType* expType);
 #endif
