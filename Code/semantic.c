@@ -93,7 +93,6 @@ bool handleExtDefList(Morpheme* root) {
 	    handleExtDef(c);
 	} else {
 	    addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling ExtDefList, this ExtDefList has a wrong child .\n\033[0m");
-	    return false;
   	}
         c = c->siblings;
     }
@@ -453,7 +452,6 @@ bool handleDefList(Morpheme* root, Symbol* s) {
 	    handleDef(c, s);
 	} else {
 	    addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling DefList, this DefList has a wrong child .\n\033[0m");
-	    return false;
   	}
         c = c->siblings;
     }
@@ -747,7 +745,9 @@ bool handleCompSt(Morpheme* root) {
     if (c->type == _LC && c->siblings != NULL && c->siblings->type == _DefList && c->siblings->siblings != NULL
         && c->siblings->siblings->type == _StmtList && c->siblings->siblings->siblings != NULL
         && c->siblings->siblings->siblings->type == _RC) {
-        return handleDefList(c->siblings, NULL) && handleStmtList(c->siblings->siblings);
+        handleDefList(c->siblings, NULL);
+        handleStmtList(c->siblings->siblings);
+        return true;
     } else {
 	addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling CompSt, this CompSt has a wrong child .\n\033[0m");
 	return false;
@@ -777,12 +777,11 @@ bool handleStmtList(Morpheme* root) {
     }
     while (c != NULL) {
         if (c->type == _StmtList) {
-	    return handleStmtList(c);
+	    handleStmtList(c);
 	} else if (c->type == _Stmt) {
-	    return handleStmt(c);
+	    handleStmt(c);
 	} else {
 	    addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling StmtList, this StmtList has a wrong child .\n\033[0m");
-	    return false;
   	}
         c = c->siblings;
     }
@@ -822,20 +821,26 @@ bool handleStmt(Morpheme* root) {
         && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings != NULL
         && c->siblings->siblings->siblings->siblings->type == _Stmt) {
         return handleStmt(c->siblings->siblings->siblings->siblings);
-    } else if (c->type == _WHILE && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL
+    } else if (c->type == _IF && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL
         && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings != NULL 
         && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings != NULL
         && c->siblings->siblings->siblings->siblings->type == _Stmt && c->siblings->siblings->siblings->siblings->siblings != NULL
         && c->siblings->siblings->siblings->siblings->siblings->type == _ELSE 
         && c->siblings->siblings->siblings->siblings->siblings->siblings != NULL 
         && c->siblings->siblings->siblings->siblings->siblings->siblings->type == _Stmt) {
-        return handleStmt(c->siblings->siblings->siblings->siblings) && handleStmt(c->siblings->siblings->siblings->siblings->siblings->siblings);
+        handleStmt(c->siblings->siblings->siblings->siblings);
+        handleStmt(c->siblings->siblings->siblings->siblings->siblings->siblings);
+        return true;
     } else if (c->type == _IF && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL
         && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings != NULL 
         && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings != NULL
         && c->siblings->siblings->siblings->siblings->type == _Stmt) {
         return handleStmt(c->siblings->siblings->siblings->siblings);
-    } 
+    } else {
+	addLogInfo(SemanticAnalysisLog, "\033[31mwhen handling Stmt, this Stmt has a wrong child .\n\033[0m");
+        //printf("\033[31mwhen handling Stmt, this Stmt has a wrong child .\n\033[0m");
+	return false;
+    }
     return true;
 }
 
