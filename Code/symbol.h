@@ -80,6 +80,30 @@ typedef struct StructValueContent
     char *typeName; //指明这个value的类型是哪个struct
 } StructValueContent;
 
+//Expression的类型
+typedef struct ExpType
+{
+    bool leftValue;
+    ValueTypes type;
+    /* 额外字段 */
+    union {
+        //如果type是
+        char *typeName;
+        struct ArrayContent *arrayContent;
+    };
+} ExpType;
+
+//实参的类型
+typedef struct ParaType
+{
+    ValueTypes type;
+    union {
+        char *typeName;
+        ArrayContent *arrayContent;
+    } ;
+    struct ParaType *next;
+} ParaType;
+
 /*符号的定义
 * 1. 符号名
 * 2. 符号类型
@@ -111,4 +135,10 @@ bool addStructTypeField(Symbol *s, char *name);
 char *valueTypesToString(ValueTypes type);
 
 bool outputSymbol(Symbol *s);
+bool expTpyeEqual(ExpType *t1, ExpType *t2);
+bool structTypeEqual(StructTypeContent *s1, StructTypeContent *s2);
+bool arrayTypeEqual(ArrayContent *a1, ArrayContent *a2, bool useLength);
+bool isField(StructTypeContent *s, char *fieldName);
+bool argsMatch(Argument* args, ParaType* parameters);
+
 #endif

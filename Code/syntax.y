@@ -185,7 +185,7 @@ void my_yyerror(const char* msg) {
     if(error_line == pre_error_line) {
         return;
     }
-    printf("Error type B at line %d : %s\n", error_line, msg);
+    printf("Error type B at Line %d : %s\n", error_line, msg);
     pre_error_line = error_line;
     syntax_correct = 0;
 }

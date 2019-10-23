@@ -1,11 +1,20 @@
-int a, b, c;
-float d, e, f;
-int g;
-float h;
-int i[1][2][3], i, j, k[4][5];
-float x[5][2][3], y, z[41][15];
-struct Student s[10][11];
+struct Student {
+    int id;
+    int a[4];
+};
+
+struct Student2 {
+    int id2;
+    int a2[4];
+};
+
+int f(struct Student _s, float _f) {}
 
 int main() {
-    return 0;
+    struct Student s;
+    struct Student2 s2;
+    int r;
+    int x, y=0.5;
+    s = s2;
+    r = f(s2, 456.9);
 }

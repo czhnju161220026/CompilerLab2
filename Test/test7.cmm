@@ -1,0 +1,14 @@
+int f(int a, int b) {return a + b;}
+
+struct Student {
+    int id;
+};
+
+int main() {
+    float c;
+    int a = 1;
+    float d;
+    struct Student s;
+    c = f(1, s.id);
+    d = (a = (a = a));
+}

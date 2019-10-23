@@ -1,5 +1,8 @@
 #include "symbol.h"
 #include "hashset.h"
+#include "stdbool.h"
+#include <stdlib.h>
+#include <string.h>
 
 extern HashSet *symbolTable;
 
@@ -397,3 +400,180 @@ bool outputSymbol(Symbol *s)
     }
     return true;
 }
+
+//比较两个表达式类型是否相同
+//对于数组类型，比较基类型和维数
+//对于struct， 比较内容定义是否等价
+bool expTpyeEqual(ExpType *t1, ExpType *t2)
+{
+    //TODO
+    if (t1->type != t2->type)
+    {
+        return false;
+    }
+    if (t1->type == _ARRAY_TYPE_)
+    { //应该不会出现这种情况，不过还是给出判断
+        return arrayTypeEqual(t1->arrayContent, t2->arrayContent, false);
+    }
+    if (t1->type == _STRUCT_TYPE_)
+    {
+        //PROBELM
+        if(strcmp(t1->typeName, t2->typeName) == 0) {
+            return true;
+        }
+        else {
+            return structTypeEqual(get(symbolTable, t1->typeName)->struct_def, get(symbolTable, t2->typeName)->struct_def);
+        }
+    }
+    return true;
+}
+
+//比较两个结构体类型是否相同（结构等价）
+bool structTypeEqual(StructTypeContent *s1, StructTypeContent *s2)
+{
+    //printf("struct type equal\n");
+    Field *f1 = s1->fields;
+    Field *f2 = s2->fields;
+    while (f1 != NULL)
+    {
+        //printf("in while iter\n");
+        if (f2 == NULL)
+        {
+            return false;
+        }
+        Symbol *f1s = get(symbolTable, f1->name);
+        Symbol *f2s = get(symbolTable, f2->name);
+        if (f1s->symbol_type != f2s->symbol_type)
+        {
+            return false;
+        }
+        else if (f1s->symbol_type == ARRAY_SYMBOL)
+        {
+            if (!arrayTypeEqual(f1s->array_content, f2s->array_content, true))
+            {
+                return false;
+            }
+        }
+        else if (f1s->symbol_type == STRUCT_VAL_SYMBOL)
+        {
+            if (!structTypeEqual(f1s->struct_def, f2s->struct_def))
+            {
+                return false;
+            }
+        }
+        f1 = f1->next;
+        f2 = f2->next;
+    }
+
+    if (f2 != NULL)
+    { //s1的域比较结束，但是s2还有其他域
+        return false;
+    }
+    //printf("yes\n");
+    return true;
+}
+
+//比较两个数组是否同类型， useLength控制是否考虑每一维的长度
+bool arrayTypeEqual(ArrayContent *a1, ArrayContent *a2, bool useLength)
+{
+    if (!useLength)
+    {
+        return a1->dimensions == a2->dimensions;
+    }
+    else
+    {
+        if (a1->dimensions != a2->dimensions)
+        {
+            return false;
+        }
+        else
+        {
+            for (int i = 0; i < a1->dimensions; i++)
+            {
+                if (a1->size[i] != a2->size[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+}
+
+//filedName这个字段是否是struct类型s的field
+bool isField(StructTypeContent* s, char* fieldName) {
+    Field* f = s->fields;
+    while(f != NULL) {
+        if(strcmp(f->name, fieldName) == 0) {
+            return true;
+        }
+        f = f->next;
+    }
+    return false;
+}
+
+//基本类型 int float
+//结构体类型调用structTypeEqual
+bool argsMatch(Argument* args, ParaType* parameters) {
+    //TODO
+    //printf("call argsMatch\n");
+    if(args == NULL && parameters == NULL) {
+        return true;
+    }
+    else if( (args == NULL && parameters != NULL) || (args != NULL && parameters == NULL)) {
+        return false;
+    }
+    else {
+        Symbol* s1 = get(symbolTable, args->name);
+        //printf("get s1:%s\n", s1->name);
+        switch (s1->symbol_type)
+        {
+        case INT_SYMBOL:
+            if(parameters->type != _INT_TYPE_) {
+                return false;
+            }
+            else {
+                return argsMatch(args->next, parameters->next);
+            }
+            break;
+        case FLOAT_SYMBOL:
+            if(parameters->type != _FLOAT_TYPE_) {
+                return false;
+            }
+            else {
+                return argsMatch(args->next, parameters->next);
+            }
+            break;
+        case ARRAY_SYMBOL:
+            if(parameters->type != _ARRAY_TYPE_ || (!arrayTypeEqual(s1->array_content, parameters->arrayContent, true))) {
+                return false;
+            }
+            else {
+                return argsMatch(args->next, parameters->next);
+            }
+            break;
+        case STRUCT_VAL_SYMBOL:
+            if(parameters->type != _STRUCT_TYPE_) {
+                return false;
+            }
+            else if(strcmp(parameters->typeName, s1->struct_value->typeName) == 0) {
+                return true;
+            }
+            else {
+                StructTypeContent* struct1 = get(symbolTable, s1->struct_value->typeName)->struct_def;
+                StructTypeContent* struct2 = get(symbolTable, parameters->typeName)->struct_def;
+                //printf("s1:%s, p:%s\n", s1->struct_value->typeName, parameters->typeName);
+                if(!structTypeEqual(struct1, struct2)) {
+                    return false;
+                }
+                else {
+                    return argsMatch(args->next, parameters->next);
+                }
+            }
+        default:
+            break;
+        }
+    }
+}
+
+
