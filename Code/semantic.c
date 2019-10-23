@@ -439,6 +439,7 @@ bool handleVarDec(Morpheme *root, Symbol *s)
     if (c->type == _ID)
     {
         setSymbolName(s, c->idName);
+        //这里应该对vardec的类型进行设置
         return true;
     }
     else if (c->type == _VarDec && c->siblings != NULL && c->siblings->type == _LB && c->siblings->siblings != NULL && c->siblings->siblings->type == _INT && c->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->type == _RB)
@@ -791,6 +792,50 @@ bool handleDec(Morpheme *root, Symbol *s, Symbol *field)
         else
         {
             handleVarDec(c, field);
+            printf("dec:%s, type%d\n", field->name, field->symbol_type); //field的type设置的不正确
+            ExpType* expType = (ExpType*) malloc(sizeof(ExpType));
+            handleExp(c->siblings->siblings, expType);
+            printf("exp type: %d\n", expType->type);
+            switch (field->symbol_type)
+            {
+                case INT_SYMBOL:{
+                    printf("should be here\n");
+                    if(expType->type != _INT_TYPE_) {
+                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
+                        return false;
+                    }
+                    return true;
+                }
+                case FLOAT_SYMBOL: {
+                    if(expType->type != _FLOAT_TYPE_) {
+                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
+                        return false;
+                    }
+                    return true;
+                }
+                case ARRAY_SYMBOL: {
+                    if(expType->type != _ARRAY_TYPE_) {
+                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
+                        return false;
+                    }
+                    else if(!arrayTypeEqual(field->array_content, expType->arrayContent, false)){
+                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
+                        return false;
+                    }
+                    return true;
+                }
+                case STRUCT_VAL_SYMBOL: {
+                    if(expType->type != _STRUCT_TYPE_) {
+                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
+                        return false;
+                    }
+                    else if(!structTypeEqual(field->struct_def, get(symbolTable, expType->typeName)->struct_def)) {
+                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
+                        return false;
+                    }
+                    return true;
+                }
+            }
         }
     }
     else if (c->type == _VarDec && c->siblings == NULL)
@@ -1057,7 +1102,6 @@ bool handleStmt(Morpheme *root)
     if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _SEMI)
     {
         //Stmt := Exp SEMI
-        //TODO : 确定Exp的类型
         addLogInfo(SemanticAnalysisLog, "Going to handle Exp.\n");
         ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c, expType);
