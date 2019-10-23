@@ -1,11 +1,19 @@
-int a, b, c;
-float d, e, f;
-int g;
-float h;
-int i[1][2][3], i, j, k[4][5];
-float x[5][2][3], y, z[41][15];
-struct Student s[10][11];
+struct Student {
+    int id;
+    int a[4];
+};
+
 
 int main() {
-    return 0;
+    struct Student s;
+    int a[5];
+    int b;
+    int c[6][6][6];
+    s.hahaha = 1;
+    s.a=123;
+    b = a[1.5];
+    a = b[4];
+    b = c[1][2][3];
+    b = a[-1];
+    b = f();
 }

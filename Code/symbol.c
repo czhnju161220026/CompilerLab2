@@ -1,6 +1,8 @@
 #include "symbol.h"
 #include "hashset.h"
 #include "stdbool.h"
+#include <stdlib.h>
+#include <string.h>
 
 extern HashSet *symbolTable;
 
@@ -491,13 +493,15 @@ bool arrayTypeEqual(ArrayContent *a1, ArrayContent *a2, bool useLength)
 
 //filedName这个字段是否是struct类型s的field
 bool isField(StructTypeContent* s, char* fieldName) {
-
-    return true;
+    Field* f = s->fields;
+    while(f != NULL) {
+        if(strcmp(f->name, fieldName) == 0) {
+            return true;
+        }
+        f = f->next;
+    }
+    return false;
 }
 
-//如果fieldName是struct的field，返回filed*
-//否则返回NULL
-Field* getField(StructTypeContent* s, char* fieldName) {
 
-}
 

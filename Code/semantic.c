@@ -1407,7 +1407,7 @@ bool handleExp(Morpheme *root, ExpType *expType)
     {
         ExpType *childType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c->siblings, childType);
-        if (childType->type != _INT_TYPE_ || childType->type != _FLOAT_TYPE_)
+        if (childType->type != _INT_TYPE_ && childType->type != _FLOAT_TYPE_)
         {
             reportError(SemanticError, 7, c->lineNumber, "Type mismatch"); //取负操作符的操作数只能是int或者float
             return false;
@@ -1445,15 +1445,19 @@ bool handleExp(Morpheme *root, ExpType *expType)
         // check whether id is the field of struct
         StructTypeContent *s = get(symbolTable, childType->typeName)->struct_def;
         char *fieldName = c->siblings->siblings->idName;
-        Field *f = getField(s, fieldName);
-        if (f == NULL)
+        if (!isContain(symbolTable, fieldName))
+        {
+            reportError(SemanticError, 1, c->lineNumber, "Undefined ID");
+            return false;
+        }
+        if (!isField(s, fieldName))
         {
             reportError(SemanticError, 14, c->lineNumber, "Undefined field"); //未定义的域
             return false;
         }
         //pass
         //int,float,struct可以作为左值, array不行
-        Symbol *fs = get(symbolTable, f->name);
+        Symbol *fs = get(symbolTable, fieldName);
         switch (fs->symbol_type)
         {
         case INT_SYMBOL:
@@ -1477,4 +1481,109 @@ bool handleExp(Morpheme *root, ExpType *expType)
         }
         return true;
     }
+    //case: EXP-> EXP LB EXP RB
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _LB && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->type == _RB && c->siblings->siblings->siblings->siblings == NULL)
+    {
+        Morpheme *exp1 = c;
+        Morpheme *exp2 = c->siblings->siblings;
+        ExpType *type1 = (ExpType *)malloc(sizeof(ExpType));
+        ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(exp1, type1);
+        handleExp(exp2, type2);
+        if (type1->type != _ARRAY_TYPE_)
+        {
+            reportError(SemanticError, 10, c->lineNumber, "Illegal array");
+            return false;
+        }
+        if (type2->type != _INT_TYPE_)
+        {
+            reportError(SemanticError, 12, c->lineNumber, "Array index must be an integer");
+            return false;
+        }
+        //数组和索引都是合法的话，应该设置这个表达式的类型
+        //特别注意，如果是1维数组的索引，返回的应该是基类型
+        if (type1->arrayContent->dimensions == 1)
+        {
+            //一维数组
+            expType->type = type1->arrayContent->type;
+            expType->typeName = type1->arrayContent->typeName;
+            expType->leftValue = true;
+            return true;
+        }
+        else
+        {
+            //多维数组
+            ArrayContent *ac = (ArrayContent *)malloc(sizeof(ArrayContent));
+            ac->dimensions = type1->arrayContent->dimensions - 1;
+            ac->size = (int *)malloc(sizeof(int) * ac->dimensions);
+            for (int i = 0; i < ac->dimensions; i++)
+            {
+                ac->size[i] = type1->arrayContent->size[i + 1];
+            }
+            ac->type = type1->arrayContent->type;
+            ac->typeName = type1->arrayContent->typeName;
+            expType->type = _ARRAY_TYPE_;
+            expType->arrayContent = ac;
+            expType->leftValue = false;
+            return true;
+        }
+    }
+    // case : EXP->ID LP RP 无参函数调用
+    if (c->type == _ID && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL && c->siblings->siblings->type == _RP)
+    {
+        char *funcName = c->idName;
+        if (!isContain(symbolTable, funcName))
+        {
+            reportError(SemanticError, 1, c->lineNumber, "Undefined ID");
+            return false;
+        }
+        Symbol *s = get(symbolTable, funcName);
+        if (s->symbol_type != FUNC_SYMBOL)
+        {
+            reportError(SemanticError, 11, c->lineNumber, "It is not callable");
+            return false;
+        }
+        if (s->func_content->arguments != NULL)
+        {
+            reportError(SemanticError, 9, c->lineNumber, "Arguments mismatch");
+            return false;
+        }
+
+        expType->type = s->func_content->retType;
+        expType->typeName = s->func_content->typeName;
+        return true;
+    }
+    // case : EXP -> ID LP ARGS RP 有参函数调用
+    if (c->type == _ID && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL && c->siblings->siblings->type == _Args && c->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings == NULL)
+    {
+        char *funcName = c->idName;
+        if (!isContain(symbolTable, funcName))
+        {
+            reportError(SemanticError, 1, c->lineNumber, "Undefined ID");
+            return false;
+        }
+        Symbol *s = get(symbolTable, funcName);
+        if (s->symbol_type != FUNC_SYMBOL)
+        {
+            reportError(SemanticError, 11, c->lineNumber, "It is not callable");
+            return false;
+        }
+        //要检查args是否匹配
+        Argument *arguments = s->func_content->arguments; //原函数的参数列表
+        ParaType *parameters = (ParaType *)malloc(sizeof(ParaType));
+        handleArgs(c->siblings->siblings, parameters);
+    }
+}
+
+//处理实参
+// 1)检查实参中的变量是否定义过
+// 2)返回一个parameter list，和原函数的arg list进行比较
+bool handleArgs(Morpheme *root, ParaType *parameters)
+{
+    if (root == NULL || root->type != _Args)
+    {
+        addLogInfo(SemanticAnalysisLog, "Error when handling args.");
+    }
+
+    Morpheme *c = root->child;
 }

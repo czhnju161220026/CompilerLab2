@@ -88,10 +88,21 @@ typedef struct ExpType
     /* 额外字段 */
     union {
         //如果type是
-        char *typeName; 
+        char *typeName;
         struct ArrayContent *arrayContent;
     };
 } ExpType;
+
+//实参的类型
+typedef struct ParaType
+{
+    ValueTypes type;
+    union {
+        char *typeName;
+        ArrayContent *arrayContent;
+    } ;
+    struct ParaType *next;
+} ParaType;
 
 /*符号的定义
 * 1. 符号名
@@ -124,9 +135,9 @@ bool addStructTypeField(Symbol *s, char *name);
 char *valueTypesToString(ValueTypes type);
 
 bool outputSymbol(Symbol *s);
-bool expTpyeEqual(ExpType* t1, ExpType* t2);
-bool structTypeEqual(StructTypeContent* s1, StructTypeContent* s2);
-bool arrayTypeEqual(ArrayContent* a1, ArrayContent* a2, bool useLength);
-Field* getField(StructTypeContent* s, char* fieldName);
+bool expTpyeEqual(ExpType *t1, ExpType *t2);
+bool structTypeEqual(StructTypeContent *s1, StructTypeContent *s2);
+bool arrayTypeEqual(ArrayContent *a1, ArrayContent *a2, bool useLength);
+bool isField(StructTypeContent *s, char *fieldName);
 
 #endif
