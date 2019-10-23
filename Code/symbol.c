@@ -417,7 +417,13 @@ bool expTpyeEqual(ExpType *t1, ExpType *t2)
     }
     if (t1->type == _STRUCT_TYPE_)
     {
-        return structTypeEqual(get(symbolTable, t1->typeName)->struct_def, get(symbolTable, t2->typeName)->struct_def);
+        //PROBELM
+        if(strcmp(t1->typeName, t2->typeName) == 0) {
+            return true;
+        }
+        else {
+            return structTypeEqual(get(symbolTable, t1->typeName)->struct_def, get(symbolTable, t2->typeName)->struct_def);
+        }
     }
     return true;
 }
@@ -453,8 +459,8 @@ bool structTypeEqual(StructTypeContent *s1, StructTypeContent *s2)
                 return false;
             }
         }
-        f1s = f1s->next;
-        f2s = f2s->next;
+        f1 = f1->next;
+        f2 = f2->next;
     }
 
     if (f2 != NULL)
@@ -503,5 +509,11 @@ bool isField(StructTypeContent* s, char* fieldName) {
     return false;
 }
 
+//基本类型 int float
+//结构体类型调用structTypeEqual
+bool argsMatch(Argument* args, ParaType* parameters) {
+    //TODO
+    return true;
+}
 
 

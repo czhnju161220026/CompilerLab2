@@ -28,6 +28,7 @@ int main(int argc, char **argv)
         }
         yyrestart(f);
         yyparse();
+        //printTotalGrammarTree(root, 0);
         if (syntax_correct && lexical_correct)
         {
             symbolTable = initializeHashSet(HASH_SIZE);

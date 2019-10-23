@@ -18,6 +18,7 @@ Log* initLog() {
     
 }
 bool addLogInfo(Log* log, char* content) {
+    //printf("%s\n", content);
     if (log == NULL) {
         printf("The Log is NULL.\n");
 	return false;

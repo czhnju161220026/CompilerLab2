@@ -3,17 +3,12 @@ struct Student {
     int a[4];
 };
 
-
+struct Student2 {
+    int id2;
+    int a2[4];
+};
 int main() {
     struct Student s;
-    int a[5];
-    int b;
-    int c[6][6][6];
-    s.hahaha = 1;
-    s.a=123;
-    b = a[1.5];
-    a = b[4];
-    b = c[1][2][3];
-    b = a[-1];
-    b = f();
+    struct Student2 s2;
+    s = s2;
 }

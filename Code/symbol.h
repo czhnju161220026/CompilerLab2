@@ -139,5 +139,6 @@ bool expTpyeEqual(ExpType *t1, ExpType *t2);
 bool structTypeEqual(StructTypeContent *s1, StructTypeContent *s2);
 bool arrayTypeEqual(ArrayContent *a1, ArrayContent *a2, bool useLength);
 bool isField(StructTypeContent *s, char *fieldName);
+bool argsMatch(Argument* args, ParaType* parameters);
 
 #endif

@@ -1400,6 +1400,7 @@ bool handleExp(Morpheme *root, ExpType *expType)
     // case : EXP -> LP EXP RP
     else if (c->type == _LP && c->siblings != NULL && c->siblings->type == _Exp && c->siblings->siblings != NULL && c->siblings->siblings->type == _RP && c->siblings->siblings->siblings == NULL)
     {
+        //printf("Exp->(Exp)\n");
         return handleExp(c->siblings, expType);
     }
     // case : EXP -> MINUS EXP
@@ -1572,6 +1573,19 @@ bool handleExp(Morpheme *root, ExpType *expType)
         Argument *arguments = s->func_content->arguments; //原函数的参数列表
         ParaType *parameters = (ParaType *)malloc(sizeof(ParaType));
         handleArgs(c->siblings->siblings, parameters);
+        parameters = parameters->next; //指向第一个参数
+        if (argsMatch(arguments, parameters))
+        {
+            expType->type = s->func_content->retType;
+            expType->typeName = s->func_content->typeName;
+            expType->leftValue = false;
+            return true;
+        }
+        else
+        {
+            reportError(SemanticError, 9, c->lineNumber, "Arguments mismatch");
+            return false;
+        }
     }
 }
 
@@ -1580,10 +1594,40 @@ bool handleExp(Morpheme *root, ExpType *expType)
 // 2)返回一个parameter list，和原函数的arg list进行比较
 bool handleArgs(Morpheme *root, ParaType *parameters)
 {
+    //printf("Handle args\n");
+    //printf("Line:%d\n", root->lineNumber);
     if (root == NULL || root->type != _Args)
     {
         addLogInfo(SemanticAnalysisLog, "Error when handling args.");
     }
 
     Morpheme *c = root->child;
+    //case: ARGS->EXP
+    if (c->type == _Exp && c->siblings == NULL)
+    {
+        ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, expType);
+        ParaType *paraType = (ParaType *)malloc(sizeof(ParaType));
+        paraType->type = expType->type;
+        paraType->arrayContent = expType->arrayContent;
+        paraType->typeName = expType->typeName;
+        parameters->next = paraType;
+        return true;
+    }
+    //case: ARGS->EXP COMMA ARGS
+    else if (c->type == _Exp && c->siblings != NULL && c->siblings->type == _COMMA && c->siblings->siblings != NULL && c->siblings->siblings->type == _Args && c->siblings->siblings->siblings == NULL)
+    {
+        //printf("Case args->exp, args\n");
+        ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c, expType);    //问题在这里
+        ParaType *paraType = (ParaType *)malloc(sizeof(ParaType));
+        paraType->type = expType->type;
+        paraType->arrayContent = expType->arrayContent;
+        paraType->typeName = expType->typeName;
+        //处理剩余的args
+        handleArgs(c->siblings->siblings, paraType);
+        parameters->next = paraType;
+        return true;
+    }
+
 }
