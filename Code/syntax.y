@@ -62,7 +62,7 @@ ExtDefList : /*empty*/ {$$=createMorpheme(_ExtDefList);nodeGrowth($$,1,ERROR_NOD
 ExtDef : Specifier ExtDecList SEMI {$$=createMorpheme(_ExtDef);nodeGrowth($$, 3, $1, $2, $3);}
     | Specifier SEMI   {$$=createMorpheme(_ExtDef); nodeGrowth($$, 2, $1, $2);}
     | Specifier FunDec CompSt   {$$=createMorpheme(_ExtDef); nodeGrowth($$, 3, $1, $2, $3);}
-    | Specifier error {$$=createMorpheme(_ExtDef); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("missing \';\'");}
+    | Specifier error {$$=createMorpheme(_ExtDef); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("missing \';\'!!!");}
     ;
 ExtDecList : VarDec {$$=createMorpheme(_ExtDecList); nodeGrowth($$, 1, $1);}
     | VarDec COMMA ExtDecList   {$$=createMorpheme(_ExtDecList); nodeGrowth($$, 3, $1, $2, $3);}
@@ -93,7 +93,7 @@ VarList : ParamDec COMMA VarList    {$$=createMorpheme(_VarList); nodeGrowth($$,
 ParamDec : Specifier VarDec {$$=createMorpheme(_ParamDec); nodeGrowth($$, 2, $1, $2);}
     ;
 CompSt : LC DefList StmtList RC {$$=createMorpheme(_CompSt); nodeGrowth($$, 4, $1, $2, $3, $4);}
-    | error DefList StmtList RC {$$=createMorpheme(_CompSt); nodeGrowth($$, 4, ERROR_NODE, $2, $3, $4); error_line = $1->lineNumber; my_yyerror("missing \'{\'");}
+    | error DefList StmtList RC {$$=createMorpheme(_CompSt); nodeGrowth($$, 4, ERROR_NODE, $2, $3, $4); error_line = $1->lineNumber; my_yyerror("missing \'{\'???");}
     | LC DefList StmtList error {$$=createMorpheme(_CompSt); nodeGrowth($$, 4, $1, $2, $3, ERROR_NODE); error_line = $4->lineNumber; my_yyerror("missing \'}\'");}
     ;
 StmtList : /*empty*/    {$$=createMorpheme(_StmtList); nodeGrowth($$, 1, ERROR_NODE);}
