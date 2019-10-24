@@ -794,50 +794,11 @@ bool handleDec(Morpheme *root, Symbol *s, Symbol *field)
         else
         {
             handleVarDec(c, field);
-            printf("dec:%s, type%d\n", field->name, field->symbol_type); //field的type设置的不正确
+            //printf("dec:%s, type%d\n", field->name, field->symbol_type); //field的type设置的不正确
             ExpType* expType = (ExpType*) malloc(sizeof(ExpType));
             handleExp(c->siblings->siblings, expType);
-            printf("exp type: %d\n", expType->type);
-            switch (field->symbol_type)
-            {
-                case INT_SYMBOL:{
-                    printf("should be here\n");
-                    if(expType->type != _INT_TYPE_) {
-                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
-                        return false;
-                    }
-                    return true;
-                }
-                case FLOAT_SYMBOL: {
-                    if(expType->type != _FLOAT_TYPE_) {
-                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
-                        return false;
-                    }
-                    return true;
-                }
-                case ARRAY_SYMBOL: {
-                    if(expType->type != _ARRAY_TYPE_) {
-                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
-                        return false;
-                    }
-                    else if(!arrayTypeEqual(field->array_content, expType->arrayContent, false)){
-                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
-                        return false;
-                    }
-                    return true;
-                }
-                case STRUCT_VAL_SYMBOL: {
-                    if(expType->type != _STRUCT_TYPE_) {
-                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
-                        return false;
-                    }
-                    else if(!structTypeEqual(field->struct_def, get(symbolTable, expType->typeName)->struct_def)) {
-                        reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
-                        return false;
-                    }
-                    return true;
-                }
-            }
+            //printf("exp type: %d\n", expType->type);
+            
         }
     }
     else if (c->type == _VarDec && c->siblings == NULL)
