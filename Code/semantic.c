@@ -3,6 +3,7 @@
 #include "log.h"
 int anonymous = 0;
 extern HashSet *symbolTable;
+Symbol* currentFunction = NULL;
 void printTotalGrammarTree(Morpheme *root, int depth)
 {
     if (root == NULL)
@@ -177,6 +178,7 @@ bool handleExtDef(Morpheme *root)
         Symbol *s = createSymbol();
         setSymbolType(s, FUNC_SYMBOL);
         setFuncReturnValue(s, *type, *name);
+        currentFunction = s;
         handleFunDec(c->siblings, s);
         if (!insert(symbolTable, s))
         {
@@ -1118,6 +1120,23 @@ bool handleStmt(Morpheme *root)
         ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c->siblings, expType);
         //对EXP返回的类型进行检测
+        if(currentFunction == NULL || currentFunction->symbol_type != FUNC_SYMBOL) {
+            addLogInfo(SemanticAnalysisLog, "Handle a return expression with incorrect function");
+            return false;
+        }
+        ValueTypes retType = currentFunction->func_content->retType;
+        if(expType->type != retType) {
+            reportError(SemanticError, 8, c->lineNumber, "return value mismatch");
+            return false;
+        }
+        else if(expType->type == STRUCT_VAL_SYMBOL) {
+            StructTypeContent *s1 = get(symbolTable, expType->typeName)->struct_def;
+            StructTypeContent *s2 = get(symbolTable, currentFunction->func_content->typeName)->struct_def;
+            if(!structTypeEqual(s1, s2)) {
+                reportError(SemanticError, 8, c->lineNumber, "return value mismatch");
+                return false;
+            }
+        }
         return true;
     }
     //注意条件表达式只能是INT
