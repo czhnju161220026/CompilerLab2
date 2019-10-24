@@ -1,0 +1,27 @@
+When setting struct value, this type doesn't exist.
+Error Type 15 at Line 84: Wrong field in struct definition..
+Error Type 15 at Line 87: Cannot initialize a field in definition of a struct.
+Error Type 10 at Line 100: Illegal array.
+Error Type 13 at Line 100: Type mismatch.
+Error Type 7 at Line 100: Type mismatch.
+Error Type 5 at Line 100: Type mismatch.
+Error Type 1 at Line 103: Undefined ID.
+Error Type 7 at Line 103: Type mismatch.
+Error Type 5 at Line 103: Type mismatch.
+Error Type 2 at Line 106: Undefined function.
+Error Type 11 at Line 106: It is not callable.
+Error Type 5 at Line 106: Type mismatch.
+Error Type 4 at Line 122: Duplicate definition of function..
+Error Type 5 at Line 129: Type mismatch.
+Error Type 16 at Line 135: This struct type name has been used.
+Error Type 14 at Line 170: Undefined field.
+Error Type 5 at Line 170: Type mismatch.
+Error Type 3 at Line 199: Duplicate variable..
+Error Type 7 at Line 458: Type mismatch.
+Error Type 5 at Line 458: Type mismatch.
+Error Type 6 at Line 761: Expression cannot be right value.
+Error Type 5 at Line 761: Type mismatch.
+Error Type 9 at Line 769: Arguments mismatch.
+Error Type 5 at Line 769: Type mismatch.
+Error Type 17 at Line 972: This struct type is undefined.
+Error Type 8 at Line 2044: return value mismatch.

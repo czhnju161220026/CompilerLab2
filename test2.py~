@@ -22,6 +22,7 @@ def compare(output, correctOutput):
     else:
         for k in dict_c.keys():
             if not k in dict_o:
+                print(k)
                 return False
         return True
 
@@ -43,7 +44,28 @@ def checkCase(type):
         else:
             print("\033[31m %s wrong \033[0m" % (cmmFile))
 
+def checkMultiCase():
+    for i in range(9):
+        cmmFile = "30Lab2MultipleErrorMultipleTimes." + str(i) + ".cmm"
+        cmmLog = "30Lab2MultipleErrorMultipleTimes." + str(i) + ".log"
+        os.system("./Code/parser Advanced/%s > temp.output" % (cmmFile))
+        myOutput = open("temp.output", "r").readlines()
+        log = open("Advanced/%s" % (cmmLog), "r").readlines()
+        if compare(myOutput, log):
+            print("\033[32m %s passed \033[0m" % (cmmFile))
+        else:
+            print("\033[31m %s wrong \033[0m" % (cmmFile))
+    cmmFile = "17Lab2MultipleError.0.cmm"
+    cmmLog = "17Lab2MultipleError.0.log"
+    os.system("./Code/parser Advanced/%s > temp.output" % (cmmFile))
+    myOutput = open("temp.output", "r").readlines()
+    log = open("Advanced/%s" % (cmmLog), "r").readlines()
+    if compare(myOutput, log):
+        print("\033[32m %s passed \033[0m" % (cmmFile))
+    else:
+        print("\033[31m %s wrong \033[0m" % (cmmFile))
+
 if __name__=='__main__':
-    check_list = [8, 9, 20, 21, 22, 23]
+    check_list = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,    24, 25]
     for c in check_list:
         checkCase(c)
