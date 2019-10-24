@@ -1,4 +1,6 @@
 # Compile Lab 2: semantic analysis
+## 2019/10/24
++ 发布一个稳定版本，通过所有single advance
 ## 2019/10/21
 ### 进展
 + 写了一个自动测试的脚本，可以去advance的用例自动测试
