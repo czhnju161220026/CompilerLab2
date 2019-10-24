@@ -17,4 +17,7 @@ int main() {
     int x, y=0.5;
     s = s2;
     r = f(s2, 456.9);
+    while(1) {
+        f(f(), 1);
+    }
 }
