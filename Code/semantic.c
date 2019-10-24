@@ -1510,7 +1510,7 @@ bool handleExp(Morpheme *root, ExpType *expType)
         char *fieldName = c->siblings->siblings->idName;
         if (!isContain(symbolTable, fieldName))
         {
-            reportError(SemanticError, 1, c->lineNumber, "Undefined ID");
+            reportError(SemanticError, 14, c->lineNumber, "Undefined field");
             return false;
         }
         if (!isField(s, fieldName))
