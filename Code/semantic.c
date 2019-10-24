@@ -1114,25 +1114,43 @@ bool handleStmt(Morpheme *root)
     else if (c->type == _RETURN && c->siblings != NULL && c->siblings->type == _Exp && c->siblings->siblings != NULL && c->siblings->siblings->type == _SEMI)
     {
         //Stmt := RETURN Exp SEMI
-        // TODO
         addLogInfo(SemanticAnalysisLog, "Going to handle Exp.\n");
         ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c->siblings, expType);
+        //对EXP返回的类型进行检测
         return true;
     }
     //注意条件表达式只能是INT
     else if (c->type == _WHILE && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->siblings->type == _Stmt)
     {
+        ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c->siblings->siblings, expType);
+        if(expType->type != _INT_TYPE_) {
+            addLogInfo(SemanticAnalysisLog, "Exp must be int");
+            //return false;
+        }
         return handleStmt(c->siblings->siblings->siblings->siblings);
     }
     else if (c->type == _IF && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->siblings->type == _Stmt && c->siblings->siblings->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->siblings->siblings->type == _ELSE && c->siblings->siblings->siblings->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->siblings->siblings->siblings->type == _Stmt)
     {
         handleStmt(c->siblings->siblings->siblings->siblings);
         handleStmt(c->siblings->siblings->siblings->siblings->siblings->siblings);
+        ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c->siblings->siblings, expType);
+        if(expType->type != _INT_TYPE_) {
+            addLogInfo(SemanticAnalysisLog, "Exp must be int");
+            return false;
+        }
         return true;
     }
     else if (c->type == _IF && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL && c->siblings->siblings->type == _Exp && c->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->siblings->type == _Stmt)
     {
+        ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
+        handleExp(c->siblings->siblings, expType);
+        if(expType->type != _INT_TYPE_) {
+            addLogInfo(SemanticAnalysisLog, "Exp must be int");
+            //return false;
+        }
         return handleStmt(c->siblings->siblings->siblings->siblings);
     }
     else
@@ -1576,10 +1594,11 @@ bool handleExp(Morpheme *root, ExpType *expType)
     // case : EXP->ID LP RP 无参函数调用
     if (c->type == _ID && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL && c->siblings->siblings->type == _RP)
     {
+        //printf("function call2 @ line: %d\n", c->lineNumber);
         char *funcName = c->idName;
         if (!isContain(symbolTable, funcName))
         {
-            reportError(SemanticError, 1, c->lineNumber, "Undefined ID");
+            reportError(SemanticError, 2, c->lineNumber, "Undefined function");
             return false;
         }
         Symbol *s = get(symbolTable, funcName);
@@ -1601,6 +1620,7 @@ bool handleExp(Morpheme *root, ExpType *expType)
     // case : EXP -> ID LP ARGS RP 有参函数调用
     if (c->type == _ID && c->siblings != NULL && c->siblings->type == _LP && c->siblings->siblings != NULL && c->siblings->siblings->type == _Args && c->siblings->siblings->siblings != NULL && c->siblings->siblings->siblings->type == _RP && c->siblings->siblings->siblings->siblings == NULL)
     {
+        //printf("function call @ line: %d\n", c->lineNumber);
         char *funcName = c->idName;
         if (!isContain(symbolTable, funcName))
         {

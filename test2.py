@@ -44,6 +44,6 @@ def checkCase(type):
             print("\033[31m %s wrong \033[0m" % (cmmFile))
 
 if __name__=='__main__':
-    check_list = [6, 8, 9, 20, 21, 22, 23,    24, 25]
+    check_list = [6, 7, 8, 9, 10, 11, 12, 14,20, 21, 22, 23,    24, 25]
     for c in check_list:
         checkCase(c)
