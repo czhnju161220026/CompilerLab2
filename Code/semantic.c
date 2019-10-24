@@ -3,7 +3,7 @@
 #include "log.h"
 int anonymous = 0;
 extern HashSet *symbolTable;
-Symbol* currentFunction = NULL;
+Symbol *currentFunction = NULL;
 void printTotalGrammarTree(Morpheme *root, int depth)
 {
     if (root == NULL)
@@ -795,10 +795,9 @@ bool handleDec(Morpheme *root, Symbol *s, Symbol *field)
         {
             handleVarDec(c, field);
             //printf("dec:%s, type%d\n", field->name, field->symbol_type); //field的type设置的不正确
-            ExpType* expType = (ExpType*) malloc(sizeof(ExpType));
+            ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
             handleExp(c->siblings->siblings, expType);
             //printf("exp type: %d\n", expType->type);
-            
         }
     }
     else if (c->type == _VarDec && c->siblings == NULL)
@@ -1081,19 +1080,23 @@ bool handleStmt(Morpheme *root)
         ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c->siblings, expType);
         //对EXP返回的类型进行检测
-        if(currentFunction == NULL || currentFunction->symbol_type != FUNC_SYMBOL) {
+        if (currentFunction == NULL || currentFunction->symbol_type != FUNC_SYMBOL)
+        {
             addLogInfo(SemanticAnalysisLog, "Handle a return expression with incorrect function");
             return false;
         }
         ValueTypes retType = currentFunction->func_content->retType;
-        if(expType->type != retType) {
+        if (expType->type != retType)
+        {
             reportError(SemanticError, 8, c->lineNumber, "return value mismatch");
             return false;
         }
-        else if(expType->type == STRUCT_VAL_SYMBOL) {
+        else if (expType->type == STRUCT_VAL_SYMBOL)
+        {
             StructTypeContent *s1 = get(symbolTable, expType->typeName)->struct_def;
             StructTypeContent *s2 = get(symbolTable, currentFunction->func_content->typeName)->struct_def;
-            if(!structTypeEqual(s1, s2)) {
+            if (!structTypeEqual(s1, s2))
+            {
                 reportError(SemanticError, 8, c->lineNumber, "return value mismatch");
                 return false;
             }
@@ -1105,7 +1108,8 @@ bool handleStmt(Morpheme *root)
     {
         ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c->siblings->siblings, expType);
-        if(expType->type != _INT_TYPE_) {
+        if (expType->type != _INT_TYPE_)
+        {
             addLogInfo(SemanticAnalysisLog, "Exp must be int");
             //return false;
         }
@@ -1117,7 +1121,8 @@ bool handleStmt(Morpheme *root)
         handleStmt(c->siblings->siblings->siblings->siblings->siblings->siblings);
         ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c->siblings->siblings, expType);
-        if(expType->type != _INT_TYPE_) {
+        if (expType->type != _INT_TYPE_)
+        {
             addLogInfo(SemanticAnalysisLog, "Exp must be int");
             return false;
         }
@@ -1127,7 +1132,8 @@ bool handleStmt(Morpheme *root)
     {
         ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c->siblings->siblings, expType);
-        if(expType->type != _INT_TYPE_) {
+        if (expType->type != _INT_TYPE_)
+        {
             addLogInfo(SemanticAnalysisLog, "Exp must be int");
             //return false;
         }
@@ -1227,20 +1233,25 @@ bool handleExp(Morpheme *root, ExpType *expType)
         ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
         handleExp(c, type1);
         handleExp(c->siblings->siblings, type2);
+        bool legalExp = true;
         if (!type1->leftValue)
         {
             reportError(SemanticError, 6, c->lineNumber, "Expression cannot be right value");
-            return false;
+            legalExp = false;
         }
         //check type
         if (type1->type == _ARRAY_TYPE_ || type2->type == _ARRAY_TYPE_)
         {
             reportError(SemanticError, 5, c->lineNumber, "Wrong use of array");
-            return false;
+            legalExp = false;
         }
         else if (!expTpyeEqual(type1, type2))
         {
             reportError(SemanticError, 5, c->lineNumber, "Type mismatch");
+            legalExp = false;
+        }
+        if (!legalExp)
+        {
             return false;
         }
         //pass
@@ -1533,14 +1544,19 @@ bool handleExp(Morpheme *root, ExpType *expType)
         ExpType *type2 = (ExpType *)malloc(sizeof(ExpType));
         handleExp(exp1, type1);
         handleExp(exp2, type2);
-        if (type1->type != _ARRAY_TYPE_)
+        bool typeCheck = true;
+        if (type1->type != _ARRAY_TYPE_) //只有数组可以取索引
         {
             reportError(SemanticError, 10, c->lineNumber, "Illegal array");
-            return false;
+            typeCheck = false;
         }
-        if (type2->type != _INT_TYPE_)
+        if (type2->type != _INT_TYPE_) //索引只能是int
         {
             reportError(SemanticError, 12, c->lineNumber, "Array index must be an integer");
+            typeCheck = false;
+        }
+        if (!typeCheck)
+        {
             return false;
         }
         //数组和索引都是合法的话，应该设置这个表达式的类型
@@ -1663,7 +1679,7 @@ bool handleArgs(Morpheme *root, ParaType *parameters)
     {
         //printf("Case args->exp, args\n");
         ExpType *expType = (ExpType *)malloc(sizeof(ExpType));
-        handleExp(c, expType);    //问题在这里
+        handleExp(c, expType); //问题在这里
         ParaType *paraType = (ParaType *)malloc(sizeof(ParaType));
         paraType->type = expType->type;
         paraType->arrayContent = expType->arrayContent;
@@ -1673,5 +1689,4 @@ bool handleArgs(Morpheme *root, ParaType *parameters)
         parameters->next = paraType;
         return true;
     }
-
 }
