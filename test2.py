@@ -37,6 +37,7 @@ def checkCase(type):
         cmmFile = generateSingleCase(type, i)+".cmm"
         cmmLog = generateSingleCase(type, i) + ".log"
         os.system("./Code/parser Advanced/%s > temp.output" % (cmmFile))
+        #os.system("./Code/parser Advanced/%s"%(cmmFile))
         myOutput = open("temp.output", "r").readlines()
         log = open("Advanced/%s" % (cmmLog), "r").readlines()
         if compare(myOutput, log):
@@ -58,6 +59,7 @@ def checkMultiCase():
     cmmFile = "17Lab2MultipleError.0.cmm"
     cmmLog = "17Lab2MultipleError.0.log"
     os.system("./Code/parser Advanced/%s > temp.output" % (cmmFile))
+    #os.system("./Code/parser Advanced/%s" % (cmmFile))
     myOutput = open("temp.output", "r").readlines()
     log = open("Advanced/%s" % (cmmLog), "r").readlines()
     if compare(myOutput, log):

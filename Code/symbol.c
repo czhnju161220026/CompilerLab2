@@ -12,7 +12,7 @@ Symbol *createSymbol()
     Symbol *s = (Symbol *)malloc(sizeof(Symbol));
     if (s == NULL)
     {
-        printf("When creating symbol, memory allocation error.\n");
+        //printf("When creating symbol, memory allocation error.\n");
         return NULL;
     }
     s->next = NULL;
@@ -26,7 +26,7 @@ bool setSymbolName(Symbol *s, char *name)
     //设置symbol的名称
     if (s == NULL)
     {
-        printf("When setting symbol name, this symbol pointer is NULL.\n");
+        //printf("When setting symbol name, this symbol pointer is NULL.\n");
         return false;
     }
     /*if (isContain(symbolTable, name)) {
@@ -35,13 +35,13 @@ bool setSymbolName(Symbol *s, char *name)
     }*/
     if (s->name != NULL)
     {
-        printf("When setting symbol name, this symbol already has a name.\n");
+        //printf("When setting symbol name, this symbol already has a name.\n");
         return false;
     }
     s->name = (char *)malloc(sizeof(char) * strlen(name) + 1);
     if (s->name == NULL)
     {
-        printf("When setting symbol name, memory allocation error.\n");
+        //printf("When setting symbol name, memory allocation error.\n");
         return false;
     }
     strcpy(s->name, name);
@@ -53,12 +53,12 @@ bool setSymbolType(Symbol *s, SymbolTypes type)
     //设置symbol的类型
     if (s == NULL)
     {
-        printf("When setting symbol type, this symbol pointer is NULL.\n");
+        //printf("When setting symbol type, this symbol pointer is NULL.\n");
         return false;
     }
     if (s->symbol_type != 0)
     {
-        printf("When setting symbol(%s) type, this symbol already has a type %d.\n", s->name, s->symbol_type);
+        //printf("When setting symbol(%s) type, this symbol already has a type %d.\n", s->name, s->symbol_type);
         return false;
     }
     s->symbol_type = type;
@@ -99,12 +99,12 @@ bool addArrayDimension(Symbol *s, int size)
 {
     if (s == NULL)
     {
-        printf("When adding array dimension, this symbol pointer is NULL.\n");
+        //printf("When adding array dimension, this symbol pointer is NULL.\n");
         return false;
     }
     if (s->array_content == NULL)
     {
-        printf("When sadding array dimension, this symbol content pointer is NULL.\n");
+        //printf("When sadding array dimension, this symbol content pointer is NULL.\n");
         return false;
     }
     if (s->array_content->dimensions == 0 && s->array_content->size == NULL)
@@ -127,7 +127,7 @@ bool addArrayDimension(Symbol *s, int size)
     }
     else
     {
-        printf("When adding array dimension, dimension doesn't match with size.\n");
+        //printf("When adding array dimension, dimension doesn't match with size.\n");
         return false;
     }
 }
@@ -136,12 +136,12 @@ bool setArrayType(Symbol *s, ValueTypes type, char *name)
 {
     if (s == NULL)
     {
-        printf("When setting array type, this symbol pointer is NULL.\n");
+        //printf("When setting array type, this symbol pointer is NULL.\n");
         return false;
     }
     if (s->array_content == NULL)
     {
-        printf("When setting array type, this symbol content pointer is NULL.\n");
+        //printf("When setting array type, this symbol content pointer is NULL.\n");
         return false;
     }
     if (type != _STRUCT_TYPE_)
@@ -154,7 +154,7 @@ bool setArrayType(Symbol *s, ValueTypes type, char *name)
         Symbol *struct_def = get(symbolTable, name);
         if (struct_def == NULL || struct_def->symbol_type != STRUCT_TYPE_SYMBOL)
         {
-            printf("When setting array type, this type doesn't exist.\n");
+            //printf("When setting array type, this type doesn't exist.\n");
             return false;
         }
         s->array_content->typeName = (char *)malloc(sizeof(char) * strlen(name) + 1);
@@ -167,12 +167,12 @@ bool setFuncReturnValue(Symbol *s, ValueTypes type, char *name)
 {
     if (s == NULL)
     {
-        printf("When setting func return type, this symbol pointer is NULL.\n");
+        //printf("When setting func return type, this symbol pointer is NULL.\n");
         return false;
     }
     if (s->func_content == NULL)
     {
-        printf("When setting func return type, this symbol content pointer is NULL.\n");
+        //printf("When setting func return type, this symbol content pointer is NULL.\n");
         return false;
     }
     if (type != _STRUCT_TYPE_)
@@ -185,7 +185,7 @@ bool setFuncReturnValue(Symbol *s, ValueTypes type, char *name)
         Symbol *struct_def = get(symbolTable, name);
         if (struct_def == NULL || struct_def->symbol_type != STRUCT_TYPE_SYMBOL)
         {
-            printf("When setting func return value, this type doesn't exist.\n");
+            //printf("When setting func return value, this type doesn't exist.\n");
             return false;
         }
         s->func_content->typeName = (char *)malloc(sizeof(char) * strlen(name) + 1);
@@ -198,17 +198,17 @@ bool addFuncArgument(Symbol *s, char *name)
 {
     if (s == NULL)
     {
-        printf("When adding func argument, this symbol pointer is NULL.\n");
+        //printf("When adding func argument, this symbol pointer is NULL.\n");
         return false;
     }
     if (s->func_content == NULL)
     {
-        printf("When adding func argument, this symbol content pointer is NULL.\n");
+        //printf("When adding func argument, this symbol content pointer is NULL.\n");
         return false;
     }
     if (!isContain(symbolTable, name))
     {
-        printf("When adding func argument, this argument doesn't exist.\n");
+        //printf("When adding func argument, this argument doesn't exist.\n");
         return false;
     }
     if (s->func_content->arguments == NULL)
@@ -238,18 +238,18 @@ bool setStructValueType(Symbol *s, char *name)
 {
     if (s == NULL)
     {
-        printf("When setting struct value type, this symbol pointer is NULL.\n");
+        //printf("When setting struct value type, this symbol pointer is NULL.\n");
         return false;
     }
     if (s->struct_value == NULL)
     {
-        printf("When setting struct value type, this symbol content pointer is NULL.\n");
+        //printf("When setting struct value type, this symbol content pointer is NULL.\n");
         return false;
     }
     Symbol *struct_def = get(symbolTable, name);
     if (struct_def == NULL || struct_def->symbol_type != STRUCT_TYPE_SYMBOL)
     {
-        printf("When setting struct value, this type doesn't exist.\n");
+        //printf("When setting struct value, this type doesn't exist.\n");
         return false;
     }
     s->struct_value->typeName = (char *)malloc(sizeof(char) * strlen(name) + 1);
@@ -261,17 +261,17 @@ bool addStructTypeField(Symbol *s, char *name)
 {
     if (s == NULL)
     {
-        printf("When adding struct type field, this symbol pointer is NULL.\n");
+        //printf("When adding struct type field, this symbol pointer is NULL.\n");
         return false;
     }
     if (s->struct_value == NULL)
     {
-        printf("When adding struct type field, this symbol content pointer is NULL.\n");
+        //printf("When adding struct type field, this symbol content pointer is NULL.\n");
         return false;
     }
     if (!isContain(symbolTable, name))
     {
-        printf("When adding struct type field, this field doesn't exist.\n");
+        //printf("When adding struct type field, this field doesn't exist.\n");
         return false;
     }
     if (s->struct_def->fields == NULL)
