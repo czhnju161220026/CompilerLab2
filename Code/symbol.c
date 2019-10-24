@@ -431,12 +431,16 @@ bool expTpyeEqual(ExpType *t1, ExpType *t2)
 //比较两个结构体类型是否相同（结构等价）
 bool structTypeEqual(StructTypeContent *s1, StructTypeContent *s2)
 {
+    //outputHashSet(symbolTable);
     //printf("struct type equal\n");
     Field *f1 = s1->fields;
     Field *f2 = s2->fields;
     while (f1 != NULL)
     {
         //printf("in while iter\n");
+        //printf("f1: %s, \n", f1->name);
+        //printf("f2: %s, \n", f2->name);
+        //printf("test\n");
         if (f2 == NULL)
         {
             return false;
@@ -449,14 +453,14 @@ bool structTypeEqual(StructTypeContent *s1, StructTypeContent *s2)
         }
         else if (f1s->symbol_type == ARRAY_SYMBOL)
         {
-            if (!arrayTypeEqual(f1s->array_content, f2s->array_content, true))
+            if (!arrayTypeEqual(f1s->array_content, f2s->array_content, false))
             {
                 return false;
             }
         }
         else if (f1s->symbol_type == STRUCT_VAL_SYMBOL)
         {
-            if (!structTypeEqual(f1s->struct_def, f2s->struct_def))
+            if (!structTypeEqual(get(symbolTable, f1s->struct_value->typeName)->struct_def, get(symbolTable, f2s->struct_value->typeName)->struct_def))
             {
                 return false;
             }
@@ -476,6 +480,14 @@ bool structTypeEqual(StructTypeContent *s1, StructTypeContent *s2)
 //比较两个数组是否同类型， useLength控制是否考虑每一维的长度
 bool arrayTypeEqual(ArrayContent *a1, ArrayContent *a2, bool useLength)
 {
+    if(a1->type != a2->type) {
+        return false;
+    }
+    else if(a1->type == _STRUCT_TYPE_){
+        if(!structTypeEqual(get(symbolTable, a1->typeName)->struct_def, get(symbolTable, a2->typeName)->struct_def)) {
+            return false;
+        }
+    }
     if (!useLength)
     {
         return a1->dimensions == a2->dimensions;
